@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  
+  /* Brand Colors */
+  --color-primary: #C97A8A;
+  --color-primary-dark: #8C4A5A;
+  --color-primary-light: #F7E8EC;
+
+  /* Light Theme Metrics */
+  --bg-base: #f5f7fa;
+  --bg-surface: #ffffff;
+  --text-main: #213547;
+  --text-muted: #666666;
+  --border-color: #e5e7eb;
+  --sidebar-bg: var(--color-primary-dark);
+  --sidebar-text: #ffffff;
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-active: rgba(255, 255, 255, 0.2);
+}
+
+:root.dark-mode {
+  /* Dark Theme Metrics */
+  --bg-base: #1a1a1a;
+  --bg-surface: #242424;
+  --text-main: rgba(255, 255, 255, 0.87);
+  --text-muted: #a0a0a0;
+  --border-color: #404040;
+  /* Sidebar stays dark, maybe slightly tweaked */
+  --sidebar-bg: #111111; 
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
