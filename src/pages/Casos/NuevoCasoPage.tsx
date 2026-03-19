@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Toast } from '../../components/ui/Toast';
 import { BeneficiarioBuscador } from '../../components/beneficiarios/BeneficiarioBuscador';
-import { PROFESIONALES, CASOS_MOCK, ESTADOS } from '../../types/casos.types';
-import type { PrioridadCaso, EstadoCaso, Caso } from '../../types/casos.types';
+import { PROFESIONALES } from '../../types/casos.types';
+import type { PrioridadCaso, EstadoCaso } from '../../types/casos.types';
+import { casosService } from '../../services/casosService';
 
 const TIPOS_DE_CASO = [
   'Vulnerabilidad social',
@@ -42,6 +44,7 @@ export const NuevoCasoPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initBeneficiarioId = searchParams.get('beneficiarioId');
+  const queryClient = useQueryClient();
 
   // Core Form State
   const [beneficiarioId, setBeneficiarioId] = useState<string | null>(initBeneficiarioId || null);
@@ -111,25 +114,30 @@ export const NuevoCasoPage = () => {
     showNotification('Borrador guardado exitosamente', 'success');
   };
 
-  const handleSubmit = () => {
-    if (!validate()) return;
+  const { mutateAsync: createCaso, isPending } = useMutation({
+    mutationFn: casosService.createCaso,
+    onSuccess: (nuevoCaso) => {
+      localStorage.removeItem('borrador-caso');
+      queryClient.invalidateQueries({ queryKey: ['casos'] });
+      showNotification('Caso creado exitosamente', 'success');
+      navigate(`/casos/${nuevoCaso.id}`);
+    },
+    onError: (err: any) => {
+      showNotification(err.message || 'Error al crear el caso', 'error');
+    }
+  });
 
-    // Create mock case
-    const nuevoCaso: Caso = {
-      id: `#${4500 + CASOS_MOCK.length + 10}`, // Random new ID
-      beneficiario: `Beneficiario ${beneficiarioId}`, // Mocked name mapping
-      tipo,
-      estado,
-      prioridad,
-      profesional: profesionalId,
-      profesionalInicial: profesionalId.substring(0, 2).toUpperCase(),
-      fechaIngreso: new Date(fechaIngreso).toLocaleDateString('es-CL'),
-      ultimaActividad: new Date().toLocaleDateString('es-CL'),
-    };
+  const handleSubmit = async () => {
+    if (!validate()) return;
     
-    CASOS_MOCK.unshift(nuevoCaso);
-    localStorage.removeItem('borrador-caso');
-    navigate(`/casos/${nuevoCaso.id.replace('#','')}`);
+    await createCaso({
+      beneficiarioId: beneficiarioId!,
+      tipo,
+      descripcion,
+      objetivos,
+      prioridad,
+      profesionalId
+    });
   };
 
   const handleAddEtiqueta = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -366,7 +374,9 @@ export const NuevoCasoPage = () => {
         <div className="flex justify-end gap-3 max-w-[1200px] mx-auto w-full pr-12 lg:pr-6">
            <Button variant="secondary" onClick={() => navigate('/casos')}>Cancelar</Button>
            <Button variant="secondary" onClick={handleGuardarBorrador}>Guardar borrador</Button>
-           <Button variant="primary" onClick={handleSubmit}>Crear caso →</Button>
+           <Button variant="primary" onClick={handleSubmit} disabled={isPending}>
+             {isPending ? 'Creando...' : 'Crear caso →'}
+           </Button>
         </div>
       </div>
 

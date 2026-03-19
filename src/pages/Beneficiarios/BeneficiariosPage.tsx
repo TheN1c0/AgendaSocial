@@ -1,14 +1,15 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Modal } from '../../components/ui/Modal';
 import { useDebounce } from '../../hooks/useDebounce';
-import { BENEFICIARIOS_MOCK } from '../../types/beneficiarios.types';
 import type { FiltrosBeneficiarios } from '../../types/beneficiarios.types';
 import { BeneficiarioCard } from '../../components/beneficiarios/BeneficiarioCard';
 import { BeneficiarioFila } from '../../components/beneficiarios/BeneficiarioFila';
-import { PROFESIONALES } from '../../types/casos.types'; // Reuse profesions mock
+import { PROFESIONALES } from '../../types/casos.types';
+import { beneficiariosService } from '../../services/beneficiariosService';
 
 const filtrosIniciales: FiltrosBeneficiarios = {
   busqueda: '',
@@ -17,13 +18,13 @@ const filtrosIniciales: FiltrosBeneficiarios = {
 };
 
 export const BeneficiariosPage = () => {
-  const [beneficiarios, setBeneficiarios] = useState(BENEFICIARIOS_MOCK);
   const [filtros, setFiltros] = useState<FiltrosBeneficiarios>(filtrosIniciales);
   const [vista, setVista] = useState<'tabla' | 'grilla'>('tabla');
   const [modalNuevo, setModalNuevo] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
   const debouncedSearch = useDebounce(searchTerm, 300);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     document.title = 'Beneficiarios | Agenda Social';
@@ -33,48 +34,55 @@ export const BeneficiariosPage = () => {
     setFiltros(prev => ({ ...prev, busqueda: debouncedSearch }));
   }, [debouncedSearch]);
 
+  const { data: beneficiarios = [], isLoading, isError } = useQuery({
+    queryKey: ['beneficiarios', filtros.busqueda],
+    queryFn: () => beneficiariosService.getBeneficiarios(filtros.busqueda)
+  });
+
+  const createMutation = useMutation({
+    mutationFn: beneficiariosService.createBeneficiario,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['beneficiarios'] });
+      setModalNuevo(false);
+    }
+  });
+
   const beneficiariosFiltrados = useMemo(() => {
-    return beneficiarios.filter(b => {
-      // Búsqueda
-      if (filtros.busqueda) {
-        const q = filtros.busqueda.toLowerCase();
-        if (!b.nombre.toLowerCase().includes(q) && !b.rut.toLowerCase().includes(q)) return false;
-      }
-      // Profesional
+    const mapped = beneficiarios.map((b: any) => ({
+      ...b,
+      casosActivos: b.casosActivos ?? 0, // Backend might not send this yet
+      casosTotales: b._count?.casos || 0,
+      ultimaActividad: new Date(b.updatedAt).toLocaleDateString('es-CL'),
+      profesionalAsignado: 'Sin asignar', // Placeholder since API doesn't return this yet
+    }));
+
+    return mapped.filter((b: any) => {
+      // Profesional and CasosActivos features (simulated client-side if missing strictly from API payload)
       if (filtros.profesional && b.profesionalAsignado !== filtros.profesional) {
         return false;
       }
-      // Casos Activos
       if (filtros.tieneActivos !== null) {
-        if (filtros.tieneActivos && b.casosActivos === 0) return false;
-        if (!filtros.tieneActivos && b.casosActivos > 0) return false;
+        if (filtros.tieneActivos && b.casosTotales === 0) return false;
+        if (!filtros.tieneActivos && b.casosTotales > 0) return false;
       }
       return true;
     });
   }, [beneficiarios, filtros]);
 
-  const handleCreateMock = (e: React.FormEvent) => {
+  const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
     const formValues = Object.fromEntries(fd.entries());
     
-    const newB = {
-      id: `B00${beneficiarios.length + 1}`,
+    createMutation.mutate({
       nombre: formValues.nombre as string,
       rut: formValues.rut as string,
       telefono: (formValues.telefono as string) || '',
       email: (formValues.email as string) || '',
       direccion: (formValues.direccion as string) || '',
-      fechaNacimiento: (formValues.fechaNacimiento as string) || 'Sin registrar',
-      grupoFamiliar: (formValues.grupoFamiliar as string) || 'Sin registrar',
-      casosActivos: 0,
-      casosTotales: 0,
-      ultimaActividad: new Date().toLocaleDateString('es-CL'),
-      profesionalAsignado: 'Sin asignar'
-    };
-    
-    setBeneficiarios([newB, ...beneficiarios]);
-    setModalNuevo(false);
+      fechaNacimiento: (formValues.fechaNacimiento as string) || undefined,
+      grupoFamiliar: (formValues.grupoFamiliar as string) || ''
+    });
   };
 
   return (
@@ -159,7 +167,11 @@ export const BeneficiariosPage = () => {
       </div>
 
       {/* RENDER TABLA/GRILLA */}
-      {beneficiariosFiltrados.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center p-12 text-gray-500">Cargando beneficiarios...</div>
+      ) : isError ? (
+        <div className="flex justify-center p-12 text-red-500">Error al cargar beneficiarios.</div>
+      ) : beneficiariosFiltrados.length === 0 ? (
         <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 rounded-xl flex flex-col items-center justify-center p-12 text-center mt-4">
           <div className="text-4xl mb-4">📭</div>
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 m-0">No se encontraron beneficiarios</h3>
@@ -174,28 +186,26 @@ export const BeneficiariosPage = () => {
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Nombre</th>
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">RUT</th>
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Teléfono</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Profesional Asignado</th>
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Casos activos</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Totales</th>
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Última actividad</th>
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {beneficiariosFiltrados.map(b => <BeneficiarioFila key={b.id} beneficiario={b} />)}
+                {beneficiariosFiltrados.map((b: any) => <BeneficiarioFila key={b.id} beneficiario={b} />)}
               </tbody>
             </table>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {beneficiariosFiltrados.map(b => <BeneficiarioCard key={b.id} beneficiario={b} />)}
+            {beneficiariosFiltrados.map((b: any) => <BeneficiarioCard key={b.id} beneficiario={b} />)}
           </div>
         )
       )}
 
       {/* MODAL NUEVO */}
       <Modal isOpen={modalNuevo} onClose={() => setModalNuevo(false)} title="Nuevo Beneficiario">
-        <form onSubmit={handleCreateMock} className="flex flex-col gap-4">
+        <form onSubmit={handleCreate} className="flex flex-col gap-4">
           <Input name="nombre" placeholder="Ej: Juan Pérez" label="Nombre completo *" required />
           <Input name="rut" placeholder="Ej: 12.345.678-9" label="RUT *" required />
           <div className="grid grid-cols-2 gap-4">
@@ -219,7 +229,9 @@ export const BeneficiariosPage = () => {
 
           <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
             <Button type="button" variant="secondary" onClick={() => setModalNuevo(false)}>Cancelar</Button>
-            <Button type="submit" variant="primary">Guardar Beneficiario</Button>
+            <Button type="submit" variant="primary" disabled={createMutation.isPending}>
+              {createMutation.isPending ? 'Guardando...' : 'Guardar Beneficiario'}
+            </Button>
           </div>
         </form>
       </Modal>

@@ -8,9 +8,51 @@ export interface Caso {
   estado: EstadoCaso;
   prioridad: PrioridadCaso;
   profesional: string;
-  profesionalInicial: string;
+  profesionalInicial?: string;
   fechaIngreso: string;
   ultimaActividad: string;
+}
+
+export interface CasoDetalle extends Omit<Caso, 'beneficiario' | 'profesional'> {
+  descripcion?: string;
+  objetivos?: string;
+  createdAt: string;
+  updatedAt: string;
+  beneficiarioId: string;
+  profesionalId: string;
+  beneficiario?: {
+    id: string;
+    nombre: string;
+    rut: string;
+    telefono: string;
+    email: string;
+    direccion: string;
+    fechaNacimiento?: string;
+    grupoFamiliar?: string;
+  };
+  profesional?: {
+    id: string;
+    nombre: string;
+  };
+  etiquetas?: Array<{
+    id: string;
+    nombre: string;
+    color: string;
+  }>;
+  documentos?: Array<{
+    id: string;
+    mimetype: string;
+    nombreOriginal: string;
+    createdAt: string;
+  }>;
+  intervenciones?: Array<{
+    id: string;
+    descripcion: string;
+    fecha: string;
+    autor?: {
+      nombre: string;
+    }
+  }>;
 }
 
 export interface FiltrosCasos {

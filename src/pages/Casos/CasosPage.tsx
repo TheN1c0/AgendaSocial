@@ -1,12 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
-import { CASOS_MOCK } from '../../types/casos.types';
 import type { Caso, FiltrosCasos, EstadoCaso, PrioridadCaso } from '../../types/casos.types';
 import { CasosFiltros } from '../../components/casos/CasosFiltros';
 import { CasosToolbar } from '../../components/casos/CasosToolbar';
 import { CasosTabla } from '../../components/casos/CasosTabla';
+import { casosService } from '../../services/casosService';
+import { useDebounce } from '../../hooks/useDebounce';
 
 const ITEMS_POR_PAGINA = 10;
 
@@ -22,8 +24,8 @@ const filtrosIniciales: FiltrosCasos = {
 export const CasosPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // Load initial filters from URL query params
   const [filtros, setFiltros] = useState<FiltrosCasos>(() => ({
     ...filtrosIniciales,
     estado: (searchParams.get('estado') as EstadoCaso) || '',
@@ -39,15 +41,42 @@ export const CasosPage = () => {
   const [seleccionados, setSelec] = useState<string[]>([]);
   
   const [casoAEliminar, setCasoAEliminar] = useState<string | null>(null);
+  
+  const debouncedBusqueda = useDebounce(filtros.busqueda, 400);
 
   useEffect(() => {
     document.title = 'Casos | Agenda Social';
   }, []);
 
-  // Handlers
+  const { data: response, isLoading, isError } = useQuery({
+    queryKey: ['casos', { 
+      busqueda: debouncedBusqueda, 
+      estado: filtros.estado, 
+      prioridad: filtros.prioridad, 
+      profesional: filtros.profesional, 
+      paginaActual 
+    }],
+    queryFn: () => casosService.getCasos({
+      busqueda: debouncedBusqueda,
+      estado: filtros.estado,
+      prioridad: filtros.prioridad,
+      profesional: filtros.profesional,
+      page: paginaActual,
+      limit: ITEMS_POR_PAGINA
+    })
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: casosService.deleteCaso,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['casos'] });
+      setCasoAEliminar(null);
+    }
+  });
+
   const handleFiltrosChange = (nuevos: Partial<FiltrosCasos>) => {
     setFiltros(prev => ({ ...prev, ...nuevos }));
-    setPagina(1); // Reset page on filter
+    setPagina(1);
   };
 
   const handleClearFiltros = () => {
@@ -72,53 +101,43 @@ export const CasosPage = () => {
     }
   };
 
-  const procesarCasos = () => {
-    let filtrados = [...CASOS_MOCK];
+  const casosAPI = response?.data || [];
+  const totalItems = response?.meta?.total || 0;
+  const totalPaginas = response?.meta?.totalPages || 1;
 
-    // 1. Filter
-    if (filtros.busqueda) {
-      const b = filtros.busqueda.toLowerCase();
-      filtrados = filtrados.filter(c => 
-        c.beneficiario.toLowerCase().includes(b) || 
-        c.id.toLowerCase().includes(b)
-      );
-    }
-    if (filtros.estado) {
-      filtrados = filtrados.filter(c => c.estado === filtros.estado);
-    }
-    if (filtros.prioridad) {
-      filtrados = filtrados.filter(c => c.prioridad === filtros.prioridad);
-    }
-    if (filtros.profesional) {
-      filtrados = filtrados.filter(c => c.profesional === filtros.profesional);
-    }
+  const casosPaginados = useMemo(() => {
+    let filtrados = casosAPI.map((c: any) => ({
+      ...c,
+      beneficiarioId: c.beneficiario?.id,
+      beneficiario: c.beneficiario?.nombre || 'Desconocido',
+      profesional: c.asignadoA?.nombre || 'Sin asignar',
+      fechaIngreso: c.createdAt ? new Date(c.createdAt).toLocaleDateString('es-CL') : '-',
+      ultimaActividad: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('es-CL') : '-',
+    }));
 
-    // 2. Sort
     if (ordenColumna) {
       filtrados.sort((a, b) => {
-        const valA = a[ordenColumna] as string;
-        const valB = b[ordenColumna] as string;
+        let valA = a[ordenColumna];
+        let valB = b[ordenColumna];
         if (valA < valB) return ordenDireccion === 'asc' ? -1 : 1;
         if (valA > valB) return ordenDireccion === 'asc' ? 1 : -1;
         return 0;
       });
     }
-
     return filtrados;
-  };
-
-  const casosFiltrados = useMemo(procesarCasos, [filtros, ordenColumna, ordenDireccion]);
-  
-  // 3. Paginate
-  const totalItems = casosFiltrados.length;
-  const totalPaginas = Math.ceil(totalItems / ITEMS_POR_PAGINA) || 1;
-  const casosPaginados = casosFiltrados.slice((paginaActual - 1) * ITEMS_POR_PAGINA, paginaActual * ITEMS_POR_PAGINA);
+  }, [casosAPI, ordenColumna, ordenDireccion]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelec(casosPaginados.map(c => c.id));
     } else {
       setSelec([]);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (casoAEliminar) {
+      deleteMutation.mutate(casoAEliminar);
     }
   };
 
@@ -149,23 +168,35 @@ export const CasosPage = () => {
       />
 
       {/* TABLA / TARJETAS */}
-      <CasosTabla 
-        casos={casosPaginados}
-        vista={vista}
-        seleccionados={seleccionados}
-        onSelect={handleSelect}
-        onSelectAll={handleSelectAll}
-        ordenColumna={ordenColumna}
-        ordenDireccion={ordenDireccion}
-        onOrdenChange={handleOrdenChange}
-        paginaActual={paginaActual}
-        totalPaginas={totalPaginas}
-        totalItems={totalItems}
-        onPaginaChange={setPagina}
-        onVer={(id) => navigate(`/casos/${id.replace('#','')}`)}
-        onEditar={(id) => navigate(`/casos/${id.replace('#','')}/editar`)}
-        onEliminar={(id) => setCasoAEliminar(id)}
-      />
+      {isLoading ? (
+        <div className="flex justify-center p-12 text-gray-500">Cargando casos...</div>
+      ) : isError ? (
+        <div className="flex justify-center p-12 text-red-500">Error al cargar listado de casos.</div>
+      ) : casosPaginados.length === 0 ? (
+        <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 rounded-xl flex flex-col items-center justify-center p-12 text-center mt-4">
+          <div className="text-4xl mb-4">📭</div>
+          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 m-0">No se encontraron casos</h3>
+          <p className="text-gray-500 text-sm mt-1">Intenta ajustando o limpiando los filtros de búsqueda.</p>
+        </div>
+      ) : (
+        <CasosTabla 
+          casos={casosPaginados}
+          vista={vista}
+          seleccionados={seleccionados}
+          onSelect={handleSelect}
+          onSelectAll={handleSelectAll}
+          ordenColumna={ordenColumna}
+          ordenDireccion={ordenDireccion}
+          onOrdenChange={handleOrdenChange}
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          totalItems={totalItems}
+          onPaginaChange={setPagina}
+          onVer={(id) => navigate(`/casos/${id.replace('#','')}`)}
+          onEditar={(id) => navigate(`/casos/${id.replace('#','')}/editar`)}
+          onEliminar={(id) => setCasoAEliminar(id)}
+        />
+      )}
 
       {/* DELETE MODAL */}
       <Modal
@@ -180,11 +211,18 @@ export const CasosPage = () => {
            </div>
            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">¿Estás seguro?</h3>
            <p className="text-sm text-gray-500 mb-6">
-             Vas a eliminar el caso <strong>{casoAEliminar}</strong> permanentemente. Esta acción no se puede deshacer. (Modo MOCK: No se borrará realmente).
+             Vas a eliminar el caso permanentemente. Esta acción no se puede deshacer.
            </p>
            <div className="flex gap-3 w-full">
              <Button variant="secondary" className="flex-1" onClick={() => setCasoAEliminar(null)}>Cancelar</Button>
-             <Button variant="primary" className="flex-1 bg-red-600 hover:bg-red-700 border-red-600 text-white" onClick={() => setCasoAEliminar(null)}>Sí, eliminar</Button>
+             <Button 
+               variant="primary" 
+               className="flex-1 bg-red-600 hover:bg-red-700 border-red-600 text-white" 
+               onClick={handleConfirmDelete}
+               disabled={deleteMutation.isPending}
+             >
+               {deleteMutation.isPending ? 'Eliminando...' : 'Sí, eliminar'}
+             </Button>
            </div>
         </div>
       </Modal>

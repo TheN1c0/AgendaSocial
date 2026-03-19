@@ -1,17 +1,64 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const getHeaders = (isFormData = false) => {
+  const token = localStorage.getItem('token');
+  const headers: HeadersInit = {};
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  return headers;
+};
+
+const handleResponse = async (response: Response) => {
+  if (response.status === 401) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+    throw new Error('Sesión expirada o inválida');
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+  }
+  return response.json();
+};
+
 export const apiClient = {
-  get: async <T>(url: string): Promise<T> => {
-    // Aquí podrías agregar baseURL, intercepctores, tokens, etc.
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+  get: async <T>(endpoint: string): Promise<T> => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'GET',
+      headers: getHeaders(),
     });
-    
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return response.json();
+    return handleResponse(response);
   },
-  // put, post, delete, etc.
+
+  post: async <T>(endpoint: string, body: any, isFormData = false): Promise<T> => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: getHeaders(isFormData),
+      body: isFormData ? body : JSON.stringify(body),
+    });
+    return handleResponse(response);
+  },
+
+  put: async <T>(endpoint: string, body: any): Promise<T> => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(body),
+    });
+    return handleResponse(response);
+  },
+
+  delete: async <T>(endpoint: string): Promise<T> => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(response);
+  },
 };

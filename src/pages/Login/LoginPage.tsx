@@ -2,26 +2,32 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 import './Login.css';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuthContext();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError('');
     
-    // Simulate login for now
     if (email && password) {
-      login({
-        id: '1',
-        nombre: 'Administrador Demo',
-        email: email,
-        role: 'ADMIN'
-      });
-      navigate('/dashboard');
+      try {
+        setLoading(true);
+        const { token, usuario } = await authService.login({ email, password });
+        login(token, usuario);
+        navigate('/dashboard');
+      } catch (err: any) {
+        setError(err.message || 'Error al iniciar sesión');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -29,6 +35,7 @@ export const LoginPage = () => {
     <div className="login-container">
       <div className="login-card">
         <h1 className="login-title">Iniciar Sesión</h1>
+        {error && <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label" htmlFor="email">Correo Electrónico</label>
@@ -52,7 +59,9 @@ export const LoginPage = () => {
               required
             />
           </div>
-          <button type="submit" className="login-button">Entrar</button>
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
         </form>
       </div>
     </div>

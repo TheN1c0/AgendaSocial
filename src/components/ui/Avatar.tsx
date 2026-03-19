@@ -6,7 +6,8 @@ interface AvatarProps extends ComponentProps<'div'> {
 }
 
 export const Avatar = ({ name, size = 'md', className = '', ...props }: AvatarProps) => {
-  const initials = name
+  const safeName = name || '?';
+  const initials = safeName
     .trim()
     .split(' ')
     .filter(n => n.length > 0)
