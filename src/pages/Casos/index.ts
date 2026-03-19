@@ -1,3 +1,3 @@
-export * from './CasosPage';
-export * from './NuevoCasoPage';
-export * from './DetalleCasoPage';
+export { CasosPage } from './CasosPage';
+export { NuevoCasoPage } from './NuevoCasoPage';
+export { DetalleCasoPage } from './DetalleCasoPage';

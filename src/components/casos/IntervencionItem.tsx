@@ -1,39 +1,35 @@
+import { Avatar } from '../ui/Avatar';
+
 interface IntervencionItemProps {
-  tipo: 'actualizo' | 'cerro' | 'abrio' | 'derivo';
-  usuario: string;
-  casoId: string;
-  tiempo: string;
+  autor: { nombre: string; iniciales: string };
+  descripcion: string;
+  fecha: string;
+  hora: string;
+  isLast?: boolean;
 }
 
-export const IntervencionItem = ({ tipo, usuario, casoId, tiempo }: IntervencionItemProps) => {
-  const colorMap = {
-    actualizo: '#C97A8A', // primary
-    cerro: '#166534',     // green
-    abrio: '#0ea5e9',     // blue
-    derivo: '#d97706',    // yellow
-  };
-
-  const actionText = {
-    actualizo: `actualizó ${casoId}`,
-    cerro: `cerró ${casoId}`,
-    abrio: `abrió ${casoId}`,
-    derivo: `derivó ${casoId}`,
-  };
-
+export const IntervencionItem = ({ autor, descripcion, fecha, hora, isLast = false }: IntervencionItemProps) => {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '0.75rem 0' }}>
-      <div style={{ 
-        width: '10px', height: '10px', borderRadius: '50%', 
-        backgroundColor: colorMap[tipo], 
-        marginTop: '0.35rem', 
-        flexShrink: 0 
-      }} />
-      <div>
-        <div style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>
-          <strong>{usuario}</strong> {actionText[tipo]}
+    <div className="flex relative gap-4 mb-2">
+      {/* Timeline line */}
+      {!isLast && (
+        <div className="absolute top-8 left-4 bottom-[-16px] w-[2px] bg-gray-200 dark:bg-gray-800" />
+      )}
+      
+      <div className="relative z-10 pt-1 shrink-0">
+        <Avatar name={autor.nombre} size="sm" className="w-[32px] h-[32px] text-xs ring-4 ring-white dark:ring-[#1a1a1a]" />
+      </div>
+
+      <div className="flex flex-col pb-4 w-full">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{autor.nombre}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">·</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {fecha} a las {hora}
+          </span>
         </div>
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-          {tiempo}
+        <div className="bg-gray-50 dark:bg-[#242424] p-3 rounded-xl border border-gray-100 dark:border-gray-800 text-sm text-gray-700 dark:text-gray-300">
+          {descripcion}
         </div>
       </div>
     </div>

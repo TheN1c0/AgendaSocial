@@ -31,10 +31,7 @@ export const Sidebar = () => {
         </Link>
 
         <div className="nav-section-title">Sistema</div>
-        <Link to="/reportes" className={`nav-item ${isCurrent('/reportes') ? 'active' : ''}`}>
-          <span className="nav-icon">≡</span>
-          <span>Reportes</span>
-        </Link>
+
         <Link to="/configuracion" className={`nav-item ${isCurrent('/configuracion') ? 'active' : ''}`}>
           <span className="nav-icon">⚙️</span>
           <span>Configuración</span>

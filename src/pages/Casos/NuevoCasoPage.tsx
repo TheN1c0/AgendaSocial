@@ -1,22 +1,375 @@
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Select } from '../../components/ui/Select';
+import { Toast } from '../../components/ui/Toast';
+import { BeneficiarioBuscador } from '../../components/beneficiarios/BeneficiarioBuscador';
+import { PROFESIONALES, CASOS_MOCK, ESTADOS } from '../../types/casos.types';
+import type { PrioridadCaso, EstadoCaso, Caso } from '../../types/casos.types';
+
+const TIPOS_DE_CASO = [
+  'Vulnerabilidad social',
+  'Violencia intrafamiliar',
+  'Situación de calle',
+  'Adulto mayor en riesgo',
+  'Infancia y adolescencia',
+  'Discapacidad',
+  'Otro'
+];
+
+interface Etiqueta {
+  id: string;
+  nombre: string;
+  color: string;
+}
+
+interface DocumentoPendiente {
+  file: File;
+  nombre: string;
+  tamaño: string;
+  tipo: string;
+}
+
+const parseSize = (bytes: number) => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+};
 
 export const NuevoCasoPage = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const preSelectedBeneficiarioId = searchParams.get('beneficiarioId');
+  const initBeneficiarioId = searchParams.get('beneficiarioId');
+
+  // Core Form State
+  const [beneficiarioId, setBeneficiarioId] = useState<string | null>(initBeneficiarioId || null);
+  const [tipo, setTipo] = useState('');
+  const [fechaIngreso, setFechaIngreso] = useState(() => new Date().toISOString().split('T')[0]);
+  const [profesionalId, setProfesionalId] = useState('');
+  const [derivadoDesde, setDerivadoDesde] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [objetivos, setObjetivos] = useState('');
+
+  // Extended state
+  const [prioridad, setPrioridad] = useState<PrioridadCaso>('media');
+  const [estado, setEstado] = useState<EstadoCaso>('abierto');
+  const [proximaRevision, setProximaRevision] = useState('');
+  const [etiquetas, setEtiquetas] = useState<Etiqueta[]>([]);
+  const [documentos, setDocumentos] = useState<DocumentoPendiente[]>([]);
+
+  // UI state
+  const [errores, setErrores] = useState<Record<string, string>>({});
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success'|'error'>('success');
+  const [etiquetaInput, setEtiquetaInput] = useState('');
+  const [etiquetaColor, setEtiquetaColor] = useState('#C97A8A');
+
+  useEffect(() => {
+    document.title = 'Nuevo Caso | Agenda Social';
+    // Load Draft
+    const saved = localStorage.getItem('borrador-caso');
+    if (saved) {
+      try {
+        const p = JSON.parse(saved);
+        if (p.descripcion) setDescripcion(p.descripcion);
+        if (p.tipo) setTipo(p.tipo);
+        if (p.objetivos) setObjetivos(p.objetivos);
+      } catch (e) {}
+    }
+  }, []);
+
+  const showNotification = (msg: string, type: 'success'|'error') => {
+    setToastMessage(msg);
+    setToastType(type);
+    setShowToast(true);
+  };
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!beneficiarioId) newErrors.beneficiarioId = 'Debes seleccionar un beneficiario';
+    if (!tipo) newErrors.tipo = 'Selecciona el tipo de caso';
+    if (!descripcion.trim()) newErrors.descripcion = 'La descripción es obligatoria';
+    if (!profesionalId) newErrors.profesionalId = 'Asigna un profesional a cargo';
+    if (!fechaIngreso) newErrors.fechaIngreso = 'La fecha de ingreso es obligatoria';
+
+    setErrores(newErrors);
+    
+    if (Object.keys(newErrors).length > 0) {
+      // Scroll to top to see errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return false;
+    }
+    return true;
+  };
+
+  const handleGuardarBorrador = () => {
+    const draft = { descripcion, tipo, objetivos, beneficiarioId };
+    localStorage.setItem('borrador-caso', JSON.stringify(draft));
+    showNotification('Borrador guardado exitosamente', 'success');
+  };
+
+  const handleSubmit = () => {
+    if (!validate()) return;
+
+    // Create mock case
+    const nuevoCaso: Caso = {
+      id: `#${4500 + CASOS_MOCK.length + 10}`, // Random new ID
+      beneficiario: `Beneficiario ${beneficiarioId}`, // Mocked name mapping
+      tipo,
+      estado,
+      prioridad,
+      profesional: profesionalId,
+      profesionalInicial: profesionalId.substring(0, 2).toUpperCase(),
+      fechaIngreso: new Date(fechaIngreso).toLocaleDateString('es-CL'),
+      ultimaActividad: new Date().toLocaleDateString('es-CL'),
+    };
+    
+    CASOS_MOCK.unshift(nuevoCaso);
+    localStorage.removeItem('borrador-caso');
+    navigate(`/casos/${nuevoCaso.id.replace('#','')}`);
+  };
+
+  const handleAddEtiqueta = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!etiquetaInput.trim() || etiquetas.length >= 8) return;
+      setEtiquetas([...etiquetas, { id: Date.now().toString(), nombre: etiquetaInput.trim(), color: etiquetaColor }]);
+      setEtiquetaInput('');
+    }
+  };
+
+  const removeEtiqueta = (id: string) => {
+    setEtiquetas(etiquetas.filter(e => e.id !== id));
+  };
+
+  const handleFileDrop = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+         const newDocs = Array.from(e.target.files).map(f => ({
+           file: f,
+           nombre: f.name,
+           tamaño: parseSize(f.size),
+           tipo: f.type.startsWith('image/') ? 'imagen' : f.type === 'application/pdf' ? 'pdf' : 'otro'
+         }));
+         setDocumentos([...documentos, ...newDocs]);
+    }
+  };
+
+  const removeDocument = (idx: number) => {
+    setDocumentos(documentos.filter((_, i) => i !== idx));
+  };
 
   return (
-    <div>
-      <h1 style={{ marginTop: 0, marginBottom: '2rem' }}>Registrar Nuevo Caso</h1>
-      <Card>
-        <p>Formulario para registrar caso...</p>
+    <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-[1200px] mx-auto pb-24">
+      {showToast && (
+        <Toast mensaje={toastMessage} tipo={toastType} onClose={() => setShowToast(false)} />
+      )}
+
+      {/* Breadcrumb */}
+      <nav className="text-sm font-medium text-gray-500 mb-2 mt-2">
+        <span onClick={() => navigate('/casos')} className="hover:text-primary transition-colors cursor-pointer">Casos</span>
+        <span className="mx-2">›</span>
+        <span className="text-gray-900 dark:text-gray-100">Nuevo caso</span>
+      </nav>
+
+      {/* HEADER */}
+      <div className="flex flex-col gap-2 bg-white dark:bg-[#1a1a1a] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0">Nuevo caso</h1>
+        <p className="text-sm text-gray-500 mt-1 mb-0">Complete los datos para registrar un nuevo expediente en el sistema</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {preSelectedBeneficiarioId && (
-          <div style={{ padding: '1rem', backgroundColor: '#e0f2fe', color: '#075985', borderRadius: '4px', fontSize: '0.85rem', marginTop: '1rem' }}>
-            Info: El beneficiario con ID <strong>{preSelectedBeneficiarioId}</strong> ha sido pre-seleccionado automáticamente.
-          </div>
-        )}
-      </Card>
+        {/* COLUMNA PRINCIPAL 2/3 */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          
+          <Card title="Beneficiario">
+            <div className="flex flex-col gap-3">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Seleccionar beneficiario *</label>
+              <BeneficiarioBuscador 
+                 onSelect={(b) => setBeneficiarioId(b ? b.id : null)} 
+                 initialId={initBeneficiarioId}
+              />
+              {errores.beneficiarioId && <p className="text-red-500 text-xs m-0 mt-1">{errores.beneficiarioId}</p>}
+            </div>
+          </Card>
+
+          <Card title="Datos del caso">
+            <div className="flex flex-col gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo de caso *</label>
+                  <Select 
+                    value={tipo} 
+                    onChange={e => setTipo(e.target.value)}
+                    options={[{value:'', label:'Selecciona...'}, ...TIPOS_DE_CASO.map(t => ({value:t, label:t}))]}
+                  />
+                  {errores.tipo && <p className="text-red-500 text-xs m-0 mt-1">{errores.tipo}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de ingreso *</label>
+                  <Input type="date" value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} />
+                  {errores.fechaIngreso && <p className="text-red-500 text-xs m-0 mt-1">{errores.fechaIngreso}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profesional a cargo *</label>
+                  <Select 
+                    value={profesionalId} 
+                    onChange={e => setProfesionalId(e.target.value)}
+                    options={[{value:'', label:'Selecciona...'}, ...PROFESIONALES.map(t => ({value:t, label:t}))]}
+                  />
+                  {errores.profesionalId && <p className="text-red-500 text-xs m-0 mt-1">{errores.profesionalId}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Derivado desde (Op.)</label>
+                  <Input placeholder="Ej: Hospital Clínico" value={derivadoDesde} onChange={e => setDerivadoDesde(e.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción de la situación inicial *</label>
+                <textarea
+                  rows={4}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-[#242424] dark:text-white"
+                  placeholder="Detalla la situación del beneficiario al momento de ingresar..."
+                  value={descripcion}
+                  onChange={e => setDescripcion(e.target.value)}
+                />
+                {errores.descripcion && <p className="text-red-500 text-xs m-0 mt-1">{errores.descripcion}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Objetivos preliminares de intervención (Op.)</label>
+                <textarea
+                  rows={3}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-[#242424] dark:text-white"
+                  placeholder="Qué se busca lograr a corto/mediano plazo..."
+                  value={objetivos}
+                  onChange={e => setObjetivos(e.target.value)}
+                />
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Prioridad asignada">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+               {([
+                 { id: 'baja', color: 'bg-green-100 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400', txt: 'Baja', sub: 'Sin urgencia' },
+                 { id: 'media', color: 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400', txt: 'Media', sub: 'Seguimiento normal' },
+                 { id: 'alta', color: 'bg-red-100 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400', txt: 'Alta', sub: 'Atención urgente' }
+               ] as const).map(p => (
+                 <div 
+                   key={p.id}
+                   onClick={() => setPrioridad(p.id)}
+                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                     prioridad === p.id 
+                       ? `border-primary shadow-sm bg-primary/5 dark:bg-primary/10` 
+                       : `border-transparent bg-gray-50 hover:bg-gray-100 dark:bg-[#242424] dark:hover:bg-[#2a2a2a]`
+                   }`}
+                 >
+                   <div className={`w-3 h-3 rounded-full mb-3 shadow-inner blur-[1px] ${p.color.split(' ')[0]}`}></div>
+                   <span className="font-bold text-gray-900 dark:text-gray-100">{p.txt}</span>
+                   <span className="text-xs text-gray-500 mt-1">{p.sub}</span>
+                 </div>
+               ))}
+            </div>
+          </Card>
+
+          <Card title="Documentos iniciales adjuntos">
+            <label className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-[#1f1f1f]/50 hover:bg-gray-50 dark:hover:bg-[#242424] rounded-xl cursor-pointer transition-colors text-center">
+              <span className="text-3xl mb-3 opacity-50">📂</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium mb-1">Arrastra archivos aquí o haz clic</span>
+              <span className="text-xs text-gray-500">PDF, JPG, PNG · Máx 10MB por archivo</span>
+              <input type="file" multiple className="hidden" onChange={handleFileDrop} />
+            </label>
+            
+            {documentos.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden p-2">
+                {documentos.map((d, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-[#242424] rounded-md transition-colors border border-gray-100 dark:border-gray-800">
+                    <div className="flex gap-3 items-center truncate">
+                      <span className="text-xl leading-none">{d.tipo === 'pdf' ? '📄' : d.tipo === 'imagen' ? '🖼️' : '📎'}</span>
+                      <div className="flex flex-col truncate">
+                         <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{d.nombre}</span>
+                         <span className="text-xs text-gray-500">{d.tamaño}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => removeDocument(i)} className="text-gray-400 hover:text-red-500 bg-transparent border-none cursor-pointer px-2 text-lg">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+        </div>
+
+        {/* COLUMNA LATERAL 1/3 */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+
+          <Card title="Estado inicial">
+            <div className="flex flex-col gap-2">
+              {['abierto', 'en_proceso', 'derivado'].map(st => (
+                <label key={st} className="flex items-center gap-3 p-3 border border-gray-100 dark:border-gray-800 rounded-lg hover:border-primary/50 cursor-pointer bg-gray-50/50 dark:bg-[#242424]">
+                  <input type="radio" value={st} checked={estado === st} onChange={() => setEstado(st as EstadoCaso)} className="text-primary focus:ring-primary w-4 h-4 cursor-pointer" />
+                  <span className="capitalize text-sm font-medium text-gray-800 dark:text-gray-200">{st.replace('_', ' ')}</span>
+                </label>
+              ))}
+            </div>
+          </Card>
+
+          <Card title="Próxima revisión">
+            <div className="flex flex-col gap-3">
+               <Input type="date" value={proximaRevision} onChange={e => setProximaRevision(e.target.value)} />
+               <div className="flex gap-3 items-start p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-lg text-sm border border-blue-100 dark:border-blue-800/50">
+                 <span className="text-lg leading-none">ℹ️</span>
+                 <span>Se enviará una alerta automática al profesional a cargo en esa fecha.</span>
+               </div>
+            </div>
+          </Card>
+
+          <Card title="Etiquetas visuales">
+            <div className="flex flex-col gap-4">
+              {etiquetas.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {etiquetas.map(e => (
+                    <span key={e.id} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full text-white font-medium" style={{ backgroundColor: e.color }}>
+                      {e.nombre}
+                      <button onClick={() => removeEtiqueta(e.id)} className="ml-1 opacity-70 hover:opacity-100 text-white bg-transparent border-none cursor-pointer leading-none p-0">×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                 <input 
+                   type="color" 
+                   value={etiquetaColor} 
+                   onChange={e => setEtiquetaColor(e.target.value)} 
+                   className="w-10 h-10 p-1 border border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer bg-white dark:bg-[#242424]"
+                 />
+                 <Input 
+                   placeholder="Añadir etiqueta + Enter" 
+                   value={etiquetaInput} 
+                   onChange={e => setEtiquetaInput(e.target.value)} 
+                   onKeyDown={handleAddEtiqueta}
+                 />
+              </div>
+            </div>
+          </Card>
+
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 p-4 z-40 transition-colors">
+        <div className="flex justify-end gap-3 max-w-[1200px] mx-auto w-full pr-12 lg:pr-6">
+           <Button variant="secondary" onClick={() => navigate('/casos')}>Cancelar</Button>
+           <Button variant="secondary" onClick={handleGuardarBorrador}>Guardar borrador</Button>
+           <Button variant="primary" onClick={handleSubmit}>Crear caso →</Button>
+        </div>
+      </div>
+
     </div>
   );
 };

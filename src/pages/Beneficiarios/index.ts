@@ -1,2 +1,3 @@
-export * from './BeneficiariosPage';
-export * from './FichaBeneficiarioPage';
+export { BeneficiariosPage } from './BeneficiariosPage';
+export { BeneficiarioDetallePage } from './BeneficiarioDetallePage';
+

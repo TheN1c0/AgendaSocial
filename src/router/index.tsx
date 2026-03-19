@@ -2,13 +2,15 @@ import { createBrowserRouter } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 import { DashboardPage } from '../pages/Dashboard';
 import { LoginPage } from '../pages/Login';
-import { RootGuard, RequireAuth } from './guards';
+import { RootGuard } from './guards';
 import { AppLayout } from '../components/layout/AppLayout';
 
-// Stubs (to be created)
+// Pages
 import { CasosPage, NuevoCasoPage, DetalleCasoPage } from '../pages/Casos';
-import { BeneficiariosPage, FichaBeneficiarioPage } from '../pages/Beneficiarios';
+import { BeneficiariosPage, BeneficiarioDetallePage } from '../pages/Beneficiarios';
 import { PerfilPage } from '../pages/Perfil';
+import { NotificacionesPage } from '../pages/Notificaciones';
+import { ConfiguracionPage } from '../pages/Configuracion';
 import { UsuariosAdminPage } from '../pages/Admin';
 
 // Subcomponents pages
@@ -49,11 +51,19 @@ const routes: RouteObject[] = [
       },
       {
         path: '/beneficiarios/:id',
-        element: <FichaBeneficiarioPage />,
+        element: <BeneficiarioDetallePage />,
       },
       {
         path: '/perfil',
         element: <PerfilPage />,
+      },
+      {
+        path: '/notificaciones',
+        element: <NotificacionesPage />,
+      },
+      {
+        path: '/configuracion',
+        element: <ConfiguracionPage />,
       },
       {
         path: '/admin/usuarios',

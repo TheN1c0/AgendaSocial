@@ -17,8 +17,9 @@ export const LoginPage = () => {
     if (email && password) {
       login({
         id: '1',
-        name: 'Usuario Demo',
-        email: email
+        nombre: 'Administrador Demo',
+        email: email,
+        role: 'ADMIN'
       });
       navigate('/dashboard');
     }
