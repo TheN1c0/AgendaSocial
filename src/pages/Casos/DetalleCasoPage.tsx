@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -15,6 +15,7 @@ import { intervencionesService } from '../../services/intervencionesService';
 
 export const DetalleCasoPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   
   const [modalIntervencion, setModalIntervencion] = useState(false);
@@ -106,7 +107,7 @@ export const DetalleCasoPage = () => {
         </div>
         <div className="flex gap-3">
           <Button variant="secondary" onClick={() => setModalEstado(true)}>Cambiar estado</Button>
-          <Button variant="secondary" onClick={() => console.log('Edit')}>✏️ Editar</Button>
+          <Button variant="secondary" onClick={() => navigate(`/casos/${id!.replace('#','')}/editar`)}>✏️ Editar</Button>
         </div>
       </div>
 

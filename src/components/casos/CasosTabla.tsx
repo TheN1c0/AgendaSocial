@@ -147,9 +147,13 @@ export const CasosTabla = ({
                     <button onClick={() => onVer(c.id)} className="text-primary hover:underline bg-transparent border-none cursor-pointer p-0 font-medium">{c.codigoVisible || `#${c.id.substring(0,5).toUpperCase()}`}</button>
                   </td>
                   <td className="px-4 py-3">
-                    <Link to={`/beneficiarios/${c.id.replace('#','')}`} className="text-gray-800 dark:text-gray-200 hover:text-primary transition-colors font-medium">
-                      {c.beneficiario}
-                    </Link>
+                    {c.beneficiarioId ? (
+                      <Link to={`/beneficiarios/${c.beneficiarioId}`} className="text-gray-800 dark:text-gray-200 hover:text-primary transition-colors font-medium">
+                        {c.beneficiario}
+                      </Link>
+                    ) : (
+                      <span className="text-gray-800 dark:text-gray-200 font-medium">{c.beneficiario}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Badge estado={c.estado}>

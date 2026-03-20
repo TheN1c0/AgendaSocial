@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from '../../hooks/useDebounce';
-import { BENEFICIARIOS_MOCK } from '../../types/beneficiarios.types';
-import type { Beneficiario } from '../../types/beneficiarios.types';
+import { beneficiariosService } from '../../services/beneficiariosService';
+import type { Beneficiario } from '../../services/beneficiariosService';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 
@@ -17,18 +18,25 @@ export const BeneficiarioBuscador = ({ onSelect, placeholder = 'Buscar por nombr
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   
-  // Handle initialId
+  // Handle initialId manually
   useEffect(() => {
     if (initialId) {
-      const b = BENEFICIARIOS_MOCK.find(x => x.id === initialId);
-      if (b) {
-        setSelectedBeneficiario(b);
-        onSelect(b);
-      }
+      beneficiariosService.getBeneficiarioById(initialId)
+        .then((b) => {
+          setSelectedBeneficiario(b);
+          onSelect(b);
+        })
+        .catch(console.error);
     }
   }, [initialId]);
   
   const debouncedSearch = useDebounce(searchTerm, 300);
+
+  const { data: resultados = [], isLoading } = useQuery({
+    queryKey: ['beneficiarios', 'search', debouncedSearch],
+    queryFn: () => beneficiariosService.getBeneficiarios(debouncedSearch),
+    enabled: isOpen && !!debouncedSearch,
+  });
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -40,12 +48,6 @@ export const BeneficiarioBuscador = ({ onSelect, placeholder = 'Buscar por nombr
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const resultados = BENEFICIARIOS_MOCK.filter(b => {
-    if (!debouncedSearch) return false;
-    const term = debouncedSearch.toLowerCase();
-    return b.nombre.toLowerCase().includes(term) || b.rut.toLowerCase().includes(term);
-  });
 
   const handleSelect = (b: Beneficiario) => {
     onSelect(b);
@@ -89,7 +91,9 @@ export const BeneficiarioBuscador = ({ onSelect, placeholder = 'Buscar por nombr
       
       {isOpen && debouncedSearch && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#242424] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-          {resultados.length > 0 ? (
+          {isLoading ? (
+            <div className="p-4 text-center text-sm text-gray-500">Buscando...</div>
+          ) : resultados.length > 0 ? (
             <ul className="m-0 p-0 list-none divide-y divide-gray-100 dark:divide-gray-800">
               {resultados.map(b => (
                 <li 
@@ -100,7 +104,7 @@ export const BeneficiarioBuscador = ({ onSelect, placeholder = 'Buscar por nombr
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-gray-900 dark:text-gray-100">{b.nombre}</span>
                     <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400">
-                      {b.casosTotales} casos previos
+                      {b._count?.casos || 0} casos previos
                     </span>
                   </div>
                   <span className="text-sm text-gray-500">RUT: {b.rut}</span>

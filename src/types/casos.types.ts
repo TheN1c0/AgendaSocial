@@ -5,6 +5,7 @@ export interface Caso {
   id: string;
   codigoVisible?: string;
   beneficiario: string;
+  beneficiarioId?: string;
   tipo: string;
   estado: EstadoCaso;
   prioridad: PrioridadCaso;

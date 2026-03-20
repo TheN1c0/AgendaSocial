@@ -6,7 +6,7 @@ import { RootGuard } from './guards';
 import { AppLayout } from '../components/layout/AppLayout';
 
 // Pages
-import { CasosPage, NuevoCasoPage, DetalleCasoPage } from '../pages/Casos';
+import { CasosPage, NuevoCasoPage, DetalleCasoPage, EditarCasoPage } from '../pages/Casos';
 import { BeneficiariosPage, BeneficiarioDetallePage } from '../pages/Beneficiarios';
 import { PerfilPage } from '../pages/Perfil';
 import { NotificacionesPage } from '../pages/Notificaciones';
@@ -44,6 +44,10 @@ const routes: RouteObject[] = [
       {
         path: '/casos/:id',
         element: <DetalleCasoPage />,
+      },
+      {
+        path: '/casos/:id/editar',
+        element: <EditarCasoPage />,
       },
       {
         path: '/beneficiarios',

@@ -186,8 +186,10 @@ export const BeneficiariosPage = () => {
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Nombre</th>
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">RUT</th>
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Teléfono</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Casos activos</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Última actividad</th>
+                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Profesional</th>
+                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Casos act.</th>
+                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Casos tot.</th>
+                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Última act.</th>
                   <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-right">Acciones</th>
                 </tr>
               </thead>
