@@ -85,14 +85,14 @@ export const DetalleCasoPage = () => {
       <nav className="text-sm font-medium text-gray-500 mb-2">
         <Link to="/casos" className="hover:text-primary transition-colors">Casos</Link>
         <span className="mx-2">›</span>
-        <span className="text-gray-900 dark:text-gray-100">{caso.id}</span>
+        <span className="text-gray-900 dark:text-gray-100">{caso.codigoVisible || caso.id}</span>
       </nav>
 
       {/* HEADER DEL CASO */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1a1a] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0">
-            {caso.id.substring(0, 8).toUpperCase()} — {caso.tipo}
+            {caso.codigoVisible || caso.id.substring(0, 8).toUpperCase()} — {caso.tipo}
           </h1>
           <div className="flex flex-wrap items-center gap-2">
             <Badge estado={caso.estado}>{caso.estado.replace('_', ' ').replace(/\b\w/g, (char: string) => char.toUpperCase())}</Badge>

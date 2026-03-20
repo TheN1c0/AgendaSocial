@@ -144,7 +144,7 @@ export const CasosTabla = ({
                     />
                   </td>
                   <td className="px-4 py-3 font-medium">
-                    <button onClick={() => onVer(c.id)} className="text-primary hover:underline bg-transparent border-none cursor-pointer p-0 font-medium">{c.id}</button>
+                    <button onClick={() => onVer(c.id)} className="text-primary hover:underline bg-transparent border-none cursor-pointer p-0 font-medium">{c.codigoVisible || `#${c.id.substring(0,5).toUpperCase()}`}</button>
                   </td>
                   <td className="px-4 py-3">
                     <Link to={`/beneficiarios/${c.id.replace('#','')}`} className="text-gray-800 dark:text-gray-200 hover:text-primary transition-colors font-medium">
@@ -189,7 +189,7 @@ export const CasosTabla = ({
                
                <div className="flex justify-between items-start pr-6">
                  <div>
-                   <span className="text-xs text-primary font-bold tracking-wider">{c.id}</span>
+                   <span className="text-xs text-primary font-bold tracking-wider">{c.codigoVisible || `#${c.id.substring(0,5).toUpperCase()}`}</span>
                    <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 m-0 leading-tight mt-1">{c.beneficiario}</h3>
                    <span className="text-xs text-gray-500 line-clamp-1">{c.tipo}</span>
                  </div>
@@ -211,9 +211,7 @@ export const CasosTabla = ({
 
                <div className="text-xs text-gray-400 border-t border-gray-100 dark:border-gray-800 pt-3 mt-1 flex justify-between items-center">
                  <span>Última act: {c.ultimaActividad}</span>
-                 <button onClick={() => onVer(c.id)} className="text-primary font-medium bg-transparent border-none cursor-pointer hover:underline p-0">
-                   Ver caso &rarr;
-                 </button>
+                 <button onClick={() => onVer(c.id)} className="text-primary font-medium bg-transparent border-none cursor-pointer hover:underline p-0">Ver {c.codigoVisible || `#${c.id.substring(0,5).toUpperCase()}`}</button>
                </div>
             </div>
           ))}

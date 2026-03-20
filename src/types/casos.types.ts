@@ -3,6 +3,7 @@ export type PrioridadCaso = 'alta' | 'media' | 'baja';
 
 export interface Caso {
   id: string;
+  codigoVisible?: string;
   beneficiario: string;
   tipo: string;
   estado: EstadoCaso;

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Toast } from '../../components/ui/Toast';
 import { BeneficiarioBuscador } from '../../components/beneficiarios/BeneficiarioBuscador';
-import { PROFESIONALES } from '../../types/casos.types';
+import { userService } from '../../services/userService';
+import { useAuthContext } from '../../context/AuthContext';
 import type { PrioridadCaso, EstadoCaso } from '../../types/casos.types';
 import { casosService } from '../../services/casosService';
 
@@ -45,6 +46,18 @@ export const NuevoCasoPage = () => {
   const [searchParams] = useSearchParams();
   const initBeneficiarioId = searchParams.get('beneficiarioId');
   const queryClient = useQueryClient();
+  const { user } = useAuthContext();
+  const isDemo = user?.tipo === 'demo';
+
+  const { data: usuarios } = useQuery({
+    queryKey: ['usuarios'],
+    queryFn: userService.getUsers,
+    enabled: !isDemo
+  });
+
+  const profesionalesOptions = (usuarios as any[] || [])
+    .filter(u => u.rol === 'trabajador_social' || u.rol === 'admin')
+    .map(u => ({ value: u.id, label: u.nombre }));
 
   // Core Form State
   const [beneficiarioId, setBeneficiarioId] = useState<string | null>(initBeneficiarioId || null);
@@ -95,7 +108,7 @@ export const NuevoCasoPage = () => {
     if (!beneficiarioId) newErrors.beneficiarioId = 'Debes seleccionar un beneficiario';
     if (!tipo) newErrors.tipo = 'Selecciona el tipo de caso';
     if (!descripcion.trim()) newErrors.descripcion = 'La descripción es obligatoria';
-    if (!profesionalId) newErrors.profesionalId = 'Asigna un profesional a cargo';
+    if (!isDemo && !profesionalId) newErrors.profesionalId = 'Asigna un profesional a cargo';
     if (!fechaIngreso) newErrors.fechaIngreso = 'La fecha de ingreso es obligatoria';
 
     setErrores(newErrors);
@@ -136,7 +149,7 @@ export const NuevoCasoPage = () => {
       descripcion,
       objetivos,
       prioridad,
-      profesionalId
+      profesionalId: isDemo ? user!.id : profesionalId
     });
   };
 
@@ -224,9 +237,10 @@ export const NuevoCasoPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profesional a cargo *</label>
                   <Select 
-                    value={profesionalId} 
+                    value={isDemo ? user?.id || '' : profesionalId} 
                     onChange={e => setProfesionalId(e.target.value)}
-                    options={[{value:'', label:'Selecciona...'}, ...PROFESIONALES.map(t => ({value:t, label:t}))]}
+                    options={isDemo ? [{value: user?.id || '', label: `${user?.nombre || 'Usuario'} (Tú)`}] : [{value:'', label:'Selecciona...'}, ...profesionalesOptions]}
+                    disabled={isDemo}
                   />
                   {errores.profesionalId && <p className="text-red-500 text-xs m-0 mt-1">{errores.profesionalId}</p>}
                 </div>

@@ -181,7 +181,7 @@ export const BeneficiarioDetallePage = () => {
                   {casos.map((c: any) => (
                     <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors cursor-pointer group" onClick={() => navigate(`/casos/${c.id}`)}>
                       <td className="px-4 py-3 font-medium text-primary group-hover:underline">
-                        {c.id}
+                        {c.codigoVisible || c.id}
                       </td>
                       <td className="px-4 py-3">
                         <Badge estado={c.estado as EstadoCaso}>{c.estado.replace('_', ' ').replace(/\b\w/g, (char: string) => char.toUpperCase())}</Badge>

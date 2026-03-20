@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -10,27 +11,7 @@ import { WidgetCard } from '../../components/dashboard/WidgetCard';
 import { WidgetConfigModal } from '../../components/dashboard/WidgetConfigModal';
 import { AddWidgetModal } from '../../components/dashboard/AddWidgetModal';
 import { Link } from 'react-router-dom';
-
-// --- MOCK DATA ---
-const kpis = [
-  { label: 'Casos activos', value: 48, sub: 'En seguimiento' },
-  { label: 'Nuevos este mes', value: 12, sub: '+3 vs mes anterior', accent: true },
-  { label: 'Casos cerrados', value: 7, sub: 'Este mes' },
-  { label: 'Trabajadores activos', value: 5, sub: 'Con casos asignados' },
-];
-
-const ultimosCasos = [
-  { id: '4512', idLabel: '#4512', cliente: 'Ana G. Morales', estado: 'en_proceso', prioridad: 'alta', ts: 'Diego Rivas', initials: 'DR', fecha: '12/10/2023', ultima: '25/10/2023' },
-  { id: '4511', idLabel: '#4511', cliente: 'Luis J. Pérez', estado: 'derivado', prioridad: 'media', ts: 'Marta Gómez', initials: 'MG', fecha: '10/10/2023', ultima: '24/10/2023' },
-  { id: '4510', idLabel: '#4510', cliente: 'María L. Ruiz', estado: 'cerrado', prioridad: 'baja', ts: 'Diego Rivas', initials: 'DR', fecha: '05/10/2023', ultima: '23/10/2023' },
-];
-
-const actividad = [
-  { usuario: 'Marta G.', accion: 'actualizó', caso: '#4511', tiempo: 'Hace 10 min' },
-  { usuario: 'Diego R.', accion: 'cerró',     caso: '#4510', tiempo: 'Hace 45 min' },
-  { usuario: 'Ana B.',   accion: 'abrió',     caso: '#4512', tiempo: 'Hace 1 h'    },
-  { usuario: 'Carlos F.', accion: 'derivó',   caso: '#4509', tiempo: 'Hace 2 h'    },
-];
+import { dashboardService } from '../../services/dashboardService';
 
 export const DashboardPage = () => {
   const { widgets, toggleVisibility, moveWidget, updateWidgetConfig, setWidgets } = useDashboardWidgets();
@@ -39,6 +20,16 @@ export const DashboardPage = () => {
   const [isGeneralConfigOpen, setIsGeneralConfigOpen] = useState(false);
   const [activeConfigWidget, setActiveConfigWidget] = useState<DashboardWidget | null>(null);
   const [isAddWidgetOpen, setIsAddWidgetOpen] = useState(false);
+
+  // Fetch dashboard stats
+  const { data: stats } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: dashboardService.getStats,
+  });
+
+  const kpis = stats?.kpis || [];
+  const ultimosCasos = stats?.ultimosCasos || [];
+  const actividad = stats?.actividad || [];
 
   useEffect(() => {
     document.title = 'Inicio | Agenda Social';

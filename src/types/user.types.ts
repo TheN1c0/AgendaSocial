@@ -3,4 +3,5 @@ export interface User {
   nombre: string;
   email: string;
   role: 'ADMIN' | 'SOCIAL_WORKER' | string;
+  tipo?: 'real' | 'demo' | string;
 }
