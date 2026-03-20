@@ -9,6 +9,7 @@ import { CasosToolbar } from '../../components/casos/CasosToolbar';
 import { CasosTabla } from '../../components/casos/CasosTabla';
 import { casosService } from '../../services/casosService';
 import { useDebounce } from '../../hooks/useDebounce';
+import { ColumnSelector, type Column } from '../../components/ui/ColumnSelector';
 
 const ITEMS_POR_PAGINA = 10;
 
@@ -20,6 +21,17 @@ const filtrosIniciales: FiltrosCasos = {
   fechaDesde: '',
   fechaHasta: '',
 };
+
+const COLUMNAS_CASOS: Column[] = [
+  { id: 'id', label: 'ID' },
+  { id: 'beneficiario', label: 'Beneficiario' },
+  { id: 'estado', label: 'Estado' },
+  { id: 'prioridad', label: 'Prioridad' },
+  { id: 'profesional', label: 'Profesional' },
+  { id: 'fechaIngreso', label: 'Ingreso' },
+  { id: 'ultimaActividad', label: 'Última actividad' },
+  { id: 'acciones', label: 'Acciones' }
+];
 
 export const CasosPage = () => {
   const [searchParams] = useSearchParams();
@@ -39,6 +51,10 @@ export const CasosPage = () => {
   const [ordenColumna, setOrden] = useState<keyof Caso | null>(null);
   const [ordenDireccion, setDir] = useState<'asc' | 'desc'>('asc');
   const [seleccionados, setSelec] = useState<string[]>([]);
+  
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    COLUMNAS_CASOS.map(c => c.id)
+  );
   
   const [casoAEliminar, setCasoAEliminar] = useState<string | null>(null);
   
@@ -165,6 +181,13 @@ export const CasosPage = () => {
         totalCasos={totalItems}
         vista={vista}
         onVistaChange={setVista}
+        columnSelector={
+          <ColumnSelector 
+            columns={COLUMNAS_CASOS} 
+            visibleColumns={visibleColumns} 
+            onChange={setVisibleColumns} 
+          />
+        }
       />
 
       {/* TABLA / TARJETAS */}
@@ -182,6 +205,7 @@ export const CasosPage = () => {
         <CasosTabla 
           casos={casosPaginados}
           vista={vista}
+          visibleColumns={visibleColumns}
           seleccionados={seleccionados}
           onSelect={handleSelect}
           onSelectAll={handleSelectAll}

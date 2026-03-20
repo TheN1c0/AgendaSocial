@@ -2,16 +2,19 @@ interface CasosToolbarProps {
   totalCasos: number;
   vista: 'tabla' | 'tarjetas';
   onVistaChange: (vista: 'tabla' | 'tarjetas') => void;
+  columnSelector?: React.ReactNode;
 }
 
-export const CasosToolbar = ({ totalCasos, vista, onVistaChange }: CasosToolbarProps) => {
+export const CasosToolbar = ({ totalCasos, vista, onVistaChange, columnSelector }: CasosToolbarProps) => {
   return (
     <div className="flex justify-between items-center py-2 h-10">
       <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
         Mostrando <span className="font-bold text-gray-900 dark:text-gray-100">{totalCasos}</span> casos
       </div>
       
-      <div className="flex bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-lg border border-gray-200 dark:border-gray-800">
+      <div className="flex gap-2 items-center">
+        {vista === 'tabla' && columnSelector}
+        <div className="flex bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-lg border border-gray-200 dark:border-gray-800">
         <button
           onClick={() => onVistaChange('tabla')}
           className={`px-3 py-1 text-sm font-medium rounded-md transition-colors border-none cursor-pointer ${
@@ -32,6 +35,7 @@ export const CasosToolbar = ({ totalCasos, vista, onVistaChange }: CasosToolbarP
         >
           ☷ Tarjetas
         </button>
+        </div>
       </div>
     </div>
   );

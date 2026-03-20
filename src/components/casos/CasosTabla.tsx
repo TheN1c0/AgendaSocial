@@ -6,7 +6,8 @@ import { Avatar } from '../ui/Avatar';
 interface CasosTablaProps {
   casos: Caso[];
   vista: 'tabla' | 'tarjetas';
-  
+  visibleColumns: string[];
+
   // Selection
   seleccionados: string[];
   onSelectAll: (checked: boolean) => void;
@@ -30,7 +31,7 @@ interface CasosTablaProps {
 }
 
 export const CasosTabla = ({
-  casos, vista, seleccionados, onSelectAll, onSelect,
+  casos, vista, visibleColumns, seleccionados, onSelectAll, onSelect,
   ordenColumna, ordenDireccion, onOrdenChange,
   paginaActual, totalPaginas, totalItems, onPaginaChange,
   onVer, onEditar, onEliminar
@@ -106,30 +107,46 @@ export const CasosTabla = ({
                     className="rounded text-primary focus:ring-primary dark:bg-gray-700 border-gray-300 dark:border-gray-600 cursor-pointer"
                   />
                 </th>
-                <th style={{ width: '70px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('id')}>
-                  ID <SortArrow column="id" />
-                </th>
-                <th style={{ width: '160px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('beneficiario')}>
-                  Beneficiario <SortArrow column="beneficiario" />
-                </th>
-                <th style={{ width: '110px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('estado')}>
-                  Estado <SortArrow column="estado" />
-                </th>
-                <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('prioridad')}>
-                  Prioridad <SortArrow column="prioridad" />
-                </th>
-                <th style={{ width: '140px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('profesional')}>
-                  Profesional <SortArrow column="profesional" />
-                </th>
-                <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('fechaIngreso')}>
-                  Ingreso <SortArrow column="fechaIngreso" />
-                </th>
-                <th style={{ width: '110px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('ultimaActividad')}>
-                  Últ. actividad <SortArrow column="ultimaActividad" />
-                </th>
-                <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">
-                  Acciones
-                </th>
+                {visibleColumns.includes('id') && (
+                  <th style={{ width: '70px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('id')}>
+                    ID <SortArrow column="id" />
+                  </th>
+                )}
+                {visibleColumns.includes('beneficiario') && (
+                  <th style={{ width: '160px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('beneficiario')}>
+                    Beneficiario <SortArrow column="beneficiario" />
+                  </th>
+                )}
+                {visibleColumns.includes('estado') && (
+                  <th style={{ width: '110px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('estado')}>
+                    Estado <SortArrow column="estado" />
+                  </th>
+                )}
+                {visibleColumns.includes('prioridad') && (
+                  <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('prioridad')}>
+                    Prioridad <SortArrow column="prioridad" />
+                  </th>
+                )}
+                {visibleColumns.includes('profesional') && (
+                  <th style={{ width: '140px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('profesional')}>
+                    Profesional <SortArrow column="profesional" />
+                  </th>
+                )}
+                {visibleColumns.includes('fechaIngreso') && (
+                  <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('fechaIngreso')}>
+                    Ingreso <SortArrow column="fechaIngreso" />
+                  </th>
+                )}
+                {visibleColumns.includes('ultimaActividad') && (
+                  <th style={{ width: '110px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('ultimaActividad')}>
+                    Últ. actividad <SortArrow column="ultimaActividad" />
+                  </th>
+                )}
+                {visibleColumns.includes('acciones') && (
+                  <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">
+                    Acciones
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -143,43 +160,59 @@ export const CasosTabla = ({
                       className="rounded text-primary focus:ring-primary dark:bg-gray-700 border-gray-300 dark:border-gray-600 cursor-pointer"
                     />
                   </td>
-                  <td className="px-4 py-3 font-medium">
-                    <button onClick={() => onVer(c.id)} className="text-primary hover:underline bg-transparent border-none cursor-pointer p-0 font-medium">{c.codigoVisible || `#${c.id.substring(0,5).toUpperCase()}`}</button>
-                  </td>
-                  <td className="px-4 py-3">
-                    {c.beneficiarioId ? (
-                      <Link to={`/beneficiarios/${c.beneficiarioId}`} className="text-gray-800 dark:text-gray-200 hover:text-primary transition-colors font-medium">
-                        {c.beneficiario}
-                      </Link>
-                    ) : (
-                      <span className="text-gray-800 dark:text-gray-200 font-medium">{c.beneficiario}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge estado={c.estado}>
-                      {c.estado.replace('_', ' ').replace(/\b\w/g, char => char.toUpperCase())}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge prioridad={c.prioridad}>
-                      {c.prioridad.charAt(0).toUpperCase() + c.prioridad.slice(1)}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <Avatar name={c.profesional} size="sm" />
-                      <span className="text-gray-600 dark:text-gray-400 truncate">{c.profesional}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">{c.fechaIngreso}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.ultimaActividad}</td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex justify-center gap-2">
-                      <button onClick={() => onVer(c.id)} className="text-gray-400 hover:text-blue-500 transition-colors bg-transparent border-none cursor-pointer p-0 text-lg" title="Ver detalle">👁</button>
-                      <button onClick={() => onEditar(c.id)} className="text-gray-400 hover:text-amber-500 transition-colors bg-transparent border-none cursor-pointer p-0 text-lg" title="Editar">✏️</button>
-                      <button onClick={() => onEliminar(c.id)} className="text-gray-400 hover:text-red-500 transition-colors bg-transparent border-none cursor-pointer p-0 text-lg" title="Eliminar">🗑</button>
-                    </div>
-                  </td>
+                  {visibleColumns.includes('id') && (
+                    <td className="px-4 py-3 font-medium">
+                      <button onClick={() => onVer(c.id)} className="text-primary hover:underline bg-transparent border-none cursor-pointer p-0 font-medium">{c.codigoVisible || `#${c.id.substring(0,5).toUpperCase()}`}</button>
+                    </td>
+                  )}
+                  {visibleColumns.includes('beneficiario') && (
+                    <td className="px-4 py-3">
+                      {c.beneficiarioId ? (
+                        <Link to={`/beneficiarios/${c.beneficiarioId}`} className="text-gray-800 dark:text-gray-200 hover:text-primary transition-colors font-medium">
+                          {c.beneficiario}
+                        </Link>
+                      ) : (
+                        <span className="text-gray-800 dark:text-gray-200 font-medium">{c.beneficiario}</span>
+                      )}
+                    </td>
+                  )}
+                  {visibleColumns.includes('estado') && (
+                    <td className="px-4 py-3">
+                      <Badge estado={c.estado}>
+                        {c.estado.replace('_', ' ').replace(/\b\w/g, char => char.toUpperCase())}
+                      </Badge>
+                    </td>
+                  )}
+                  {visibleColumns.includes('prioridad') && (
+                    <td className="px-4 py-3">
+                      <Badge prioridad={c.prioridad}>
+                        {c.prioridad.charAt(0).toUpperCase() + c.prioridad.slice(1)}
+                      </Badge>
+                    </td>
+                  )}
+                  {visibleColumns.includes('profesional') && (
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <Avatar name={c.profesional} size="sm" />
+                        <span className="text-gray-600 dark:text-gray-400 truncate">{c.profesional}</span>
+                      </div>
+                    </td>
+                  )}
+                  {visibleColumns.includes('fechaIngreso') && (
+                    <td className="px-4 py-3 text-gray-500">{c.fechaIngreso}</td>
+                  )}
+                  {visibleColumns.includes('ultimaActividad') && (
+                    <td className="px-4 py-3 text-gray-500">{c.ultimaActividad}</td>
+                  )}
+                  {visibleColumns.includes('acciones') && (
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex justify-center gap-2">
+                        <button onClick={() => onVer(c.id)} className="text-gray-400 hover:text-blue-500 transition-colors bg-transparent border-none cursor-pointer p-0 text-lg" title="Ver detalle">👁</button>
+                        <button onClick={() => onEditar(c.id)} className="text-gray-400 hover:text-amber-500 transition-colors bg-transparent border-none cursor-pointer p-0 text-lg" title="Editar">✏️</button>
+                        <button onClick={() => onEliminar(c.id)} className="text-gray-400 hover:text-red-500 transition-colors bg-transparent border-none cursor-pointer p-0 text-lg" title="Eliminar">🗑</button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

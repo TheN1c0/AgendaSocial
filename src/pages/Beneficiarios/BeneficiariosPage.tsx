@@ -10,6 +10,18 @@ import { BeneficiarioCard } from '../../components/beneficiarios/BeneficiarioCar
 import { BeneficiarioFila } from '../../components/beneficiarios/BeneficiarioFila';
 import { PROFESIONALES } from '../../types/casos.types';
 import { beneficiariosService } from '../../services/beneficiariosService';
+import { ColumnSelector, type Column } from '../../components/ui/ColumnSelector';
+
+const COLUMNAS_BENEFICIARIOS: Column[] = [
+  { id: 'nombre', label: 'Nombre' },
+  { id: 'rut', label: 'RUT' },
+  { id: 'telefono', label: 'Teléfono' },
+  { id: 'profesional', label: 'Profesional' },
+  { id: 'casos_activos', label: 'Casos Act.' },
+  { id: 'casos_totales', label: 'Casos Tot.' },
+  { id: 'ultima_act', label: 'Última Act.' },
+  { id: 'acciones', label: 'Acciones' }
+];
 
 const filtrosIniciales: FiltrosBeneficiarios = {
   busqueda: '',
@@ -22,6 +34,9 @@ export const BeneficiariosPage = () => {
   const [vista, setVista] = useState<'tabla' | 'grilla'>('tabla');
   const [modalNuevo, setModalNuevo] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    COLUMNAS_BENEFICIARIOS.map(c => c.id)
+  );
   
   const debouncedSearch = useDebounce(searchTerm, 300);
   const queryClient = useQueryClient();
@@ -142,8 +157,16 @@ export const BeneficiariosPage = () => {
           Mostrando <span className="font-bold text-gray-900 dark:text-gray-100">{beneficiariosFiltrados.length}</span> beneficiarios
         </div>
         
-        <div className="flex bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-lg border border-gray-200 dark:border-gray-800">
-          <button
+        <div className="flex bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-lg border border-gray-200 dark:border-gray-800 gap-2 items-center">
+          {vista === 'tabla' && (
+            <ColumnSelector 
+              columns={COLUMNAS_BENEFICIARIOS}
+              visibleColumns={visibleColumns}
+              onChange={setVisibleColumns}
+            />
+          )}
+          <div className="flex bg-white dark:bg-[#1a1a1a] rounded-md border-none sm:border sm:border-transparent dark:sm:border-transparent">
+            <button
             onClick={() => setVista('tabla')}
             className={`px-3 py-1 text-sm font-medium rounded-md transition-colors border-none cursor-pointer ${
               vista === 'tabla' 
@@ -163,6 +186,7 @@ export const BeneficiariosPage = () => {
           >
             ☷ Grilla
           </button>
+          </div>
         </div>
       </div>
 
@@ -183,18 +207,18 @@ export const BeneficiariosPage = () => {
             <table className="w-full text-left text-sm whitespace-nowrap min-w-[900px]">
               <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400">
                 <tr>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Nombre</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">RUT</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Teléfono</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Profesional</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Casos act.</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Casos tot.</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Última act.</th>
-                  <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-right">Acciones</th>
+                  {visibleColumns.includes('nombre') && <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Nombre</th>}
+                  {visibleColumns.includes('rut') && <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">RUT</th>}
+                  {visibleColumns.includes('telefono') && <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Teléfono</th>}
+                  {visibleColumns.includes('profesional') && <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Profesional</th>}
+                  {visibleColumns.includes('casos_activos') && <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Casos act.</th>}
+                  {visibleColumns.includes('casos_totales') && <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">Casos tot.</th>}
+                  {visibleColumns.includes('ultima_act') && <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800">Última act.</th>}
+                  {visibleColumns.includes('acciones') && <th className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-right">Acciones</th>}
                 </tr>
               </thead>
-              <tbody>
-                {beneficiariosFiltrados.map((b: any) => <BeneficiarioFila key={b.id} beneficiario={b} />)}
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {beneficiariosFiltrados.map((b: any) => <BeneficiarioFila key={b.id} beneficiario={b} visibleColumns={visibleColumns} />)}
               </tbody>
             </table>
           </div>
