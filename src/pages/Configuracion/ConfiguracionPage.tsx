@@ -1,3 +1,4 @@
+// Imports required at the top
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthContext as useAuth } from '../../context/AuthContext';
@@ -5,17 +6,8 @@ import { Tabs } from '../../components/ui/Tabs';
 import { Card } from '../../components/ui/Card';
 import { PreferenciasForm } from '../../components/ui/PreferenciasForm';
 import { Button } from '../../components/ui/Button';
-
-// Mock Defaults
-const TIPOS_DEFAULT = [
-  'Vulnerabilidad social',
-  'Violencia intrafamiliar',
-  'Situación de calle',
-  'Adulto mayor en riesgo',
-  'Infancia y adolescencia',
-  'Discapacidad',
-  'Otro',
-];
+import { Input } from '../../components/ui/Input';
+import { useTiposCaso } from '../../hooks/useTiposCaso';
 
 const ETIQUETAS_DEFAULT = [
   { id: 'E001', nombre: 'Urgente',  color: '#E24B4A', usada: 3 },
@@ -48,17 +40,16 @@ export const ConfiguracionPage = () => {
   const isAdmin = user?.role === 'ADMIN';
   const tabQuery = searchParams.get('tab') || 'tipos';
   
-  // Security Redirect logic on mount or tab change
+  const { tiposCaso, create, delete: deleteTipo, isCreating, isDeleting } = useTiposCaso();
+  const [nuevoTipo, setNuevoTipo] = useState('');
+  const [showFormTipo, setShowFormTipo] = useState(false);
+  const [apiError, setApiError] = useState('');
+  
   useEffect(() => {
     if (tabQuery === 'sistema' && !isAdmin) {
       setSearchParams({ tab: 'tipos' });
     }
   }, [tabQuery, isAdmin, setSearchParams]);
-
-  const [tiposCaso, setTiposCaso] = useState(() => {
-    const saved = localStorage.getItem('config-tipos-caso');
-    return saved ? JSON.parse(saved) : TIPOS_DEFAULT;
-  });
 
   const [etiquetas, setEtiquetas] = useState(() => {
     const saved = localStorage.getItem('config-etiquetas');
@@ -71,13 +62,28 @@ export const ConfiguracionPage = () => {
 
   const handleChangeTab = (k: string) => {
     setSearchParams({ tab: k });
+    setApiError('');
   };
 
-  const removeTipo = (tipo: string) => {
-    if (window.confirm(`¿Seguro que deseas eliminar "${tipo}"?`)) {
-       const next = tiposCaso.filter((t: string) => t !== tipo);
-       setTiposCaso(next);
-       localStorage.setItem('config-tipos-caso', JSON.stringify(next));
+  const handleCrearTipo = async () => {
+    if (!nuevoTipo.trim()) return;
+    setApiError('');
+    try {
+      await create({ nombre: nuevoTipo });
+      setNuevoTipo('');
+      setShowFormTipo(false);
+    } catch (err: any) {
+      setApiError(err.message || 'Error al crear tipo de caso');
+    }
+  };
+
+  const removeTipo = async (id: string, nombre: string) => {
+    if (window.confirm(`¿Seguro que deseas eliminar el tipo "${nombre}"?`)) {
+       try {
+         await deleteTipo(id);
+       } catch (err: any) {
+         setApiError(err.message || 'Error al eliminar');
+       }
     }
   };
 
@@ -114,24 +120,50 @@ export const ConfiguracionPage = () => {
                 <div className="flex justify-between items-center mb-2">
                    <div>
                      <h3 className="m-0 text-lg font-bold text-gray-900 dark:text-gray-100">Tipos de caso</h3>
-                     <p className="text-sm text-gray-500 m-0 mt-1">Define las categorías disponibles al crear casos.</p>
+                     <p className="text-sm text-gray-500 m-0 mt-1">Define las categorías disponibles al crear casos (Límite Demo: 8).</p>
                    </div>
-                   <Button variant="secondary" onClick={() => alert('Abrir modal Crear Tipo')}>+ Agregar tipo</Button>
+                   <Button variant="secondary" onClick={() => setShowFormTipo(!showFormTipo)}>
+                     {showFormTipo ? 'Cancelar' : '+ Agregar tipo'}
+                   </Button>
                 </div>
 
-                <div className="border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
-                  {tiposCaso.map((tc: string, i: number) => (
-                    <div key={i} className="flex justify-between items-center p-3 border-b last:border-b-0 border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
-                      <div className="flex items-center gap-3">
-                        <span className="text-primary text-xs">●</span>
-                        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{tc}</span>
+                {apiError && (
+                  <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm border border-red-200 dark:border-red-800/50 flex align-center gap-2">
+                    <span className="font-bold">Error:</span> {apiError}
+                  </div>
+                )}
+
+                {showFormTipo && (
+                  <div className="flex gap-2 items-center p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-100 dark:border-gray-800">
+                    <Input 
+                      placeholder="Nuevo tipo de caso..." 
+                      value={nuevoTipo} 
+                      onChange={e => setNuevoTipo(e.target.value)} 
+                      style={{ marginBottom: 0 }}
+                      onKeyDown={e => { if (e.key === 'Enter') handleCrearTipo(); }}
+                    />
+                    <Button variant="primary" onClick={handleCrearTipo} disabled={isCreating || !nuevoTipo.trim()}>
+                      {isCreating ? 'Guardando...' : 'Guardar'}
+                    </Button>
+                  </div>
+                )}
+
+                <div className="border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden flex flex-col">
+                  {tiposCaso.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">No hay tipos de caso personalizados guardados.</div>
+                  ) : (
+                    tiposCaso.map((tc) => (
+                      <div key={tc.id} className="flex justify-between items-center p-3 border-b last:border-b-0 border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="flex items-center gap-3">
+                          <span className="text-primary text-xs">●</span>
+                          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{tc.nombre}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => removeTipo(tc.id, tc.nombre)} disabled={isDeleting} className="text-gray-400 hover:text-red-500 bg-transparent border-none cursor-pointer disabled:opacity-50" title="Eliminar">🗑</button>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-transparent border-none cursor-pointer" title="Editar">✏️</button>
-                        <button onClick={() => removeTipo(tc)} className="text-gray-400 hover:text-red-500 bg-transparent border-none cursor-pointer" title="Eliminar">🗑</button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
              </div>
            )}

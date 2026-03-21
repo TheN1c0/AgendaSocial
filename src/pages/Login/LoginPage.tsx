@@ -36,7 +36,7 @@ export const LoginPage = () => {
   };
 
   const handleDemo = () => {
-    handleLoginAction({ email: 'demo@demo.com', password: 'demo' });
+    handleLoginAction({ email: 'demo@tuapp.cl', password: 'demo1234' });
   };
 
   const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -55,7 +55,7 @@ export const LoginPage = () => {
         
         {/* LOGO */}
         <div className="mb-4 flex items-center justify-center">
-          <img src="/logo.png" alt="Logo" className="w-[72px] h-[72px]" />
+          <img src="/bravo-bytes.svg" alt="Bravo Bytes Logo" className="h-[96px] w-auto" />
         </div>
 
         <h2 className="text-[1.1rem] text-gray-800 dark:text-gray-200 font-medium mb-6">Inicie sesión en su panel</h2>
@@ -125,7 +125,7 @@ export const LoginPage = () => {
 
         {/* CARD FOOTER */}
         <div className="w-full bg-[#f8f9fa] dark:bg-[#1a1a1a]/80 py-4 mt-2 border-t border-gray-100 dark:border-gray-800 flex justify-center items-center gap-2">
-          <img src="/bravo-bytes.svg" alt="bravo" className="h-[22px] object-contain opacity-80 mix-blend-multiply dark:mix-blend-normal" style={{ filter: isDark ? 'invert(1) opacity(0.5)' : 'none' }} />
+          <img src="/bravobytesrosa.svg" alt="Bravo Bytes" className="h-[22px] object-contain opacity-80 mix-blend-multiply dark:mix-blend-normal" style={{ filter: isDark ? 'invert(1) opacity(0.5)' : 'none' }} />
           <span className="text-[13px] font-bold text-gray-700 dark:text-gray-300 tracking-tight">bravo-bytes</span>
         </div>
 

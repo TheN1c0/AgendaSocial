@@ -122,7 +122,7 @@ export const DashboardPage = () => {
                       <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{c.cliente}</td>
                       <td className="px-4 py-3">
                         <Badge estado={c.estado as any}>
-                          {c.estado === 'en_proceso' ? 'En procs.' : c.estado === 'derivado' ? 'Asignado' : 'Cerrado'}
+                          {c.estado === 'abierto' ? 'Abierto' : c.estado === 'en_proceso' ? 'En procs.' : c.estado === 'derivado' ? 'Asignado' : 'Cerrado'}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">

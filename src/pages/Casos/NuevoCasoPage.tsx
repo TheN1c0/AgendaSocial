@@ -10,17 +10,8 @@ import { BeneficiarioBuscador } from '../../components/beneficiarios/Beneficiari
 import { userService } from '../../services/userService';
 import { useAuthContext } from '../../context/AuthContext';
 import type { PrioridadCaso, EstadoCaso } from '../../types/casos.types';
+import { useTiposCaso } from '../../hooks/useTiposCaso';
 import { casosService } from '../../services/casosService';
-
-const TIPOS_DE_CASO = [
-  'Vulnerabilidad social',
-  'Violencia intrafamiliar',
-  'Situación de calle',
-  'Adulto mayor en riesgo',
-  'Infancia y adolescencia',
-  'Discapacidad',
-  'Otro'
-];
 
 interface Etiqueta {
   id: string;
@@ -59,6 +50,8 @@ export const NuevoCasoPage = () => {
     .filter(u => u.rol === 'trabajador_social' || u.rol === 'admin')
     .map(u => ({ value: u.id, label: u.nombre }));
 
+  const { tiposCaso } = useTiposCaso();
+
   // Core Form State
   const [beneficiarioId, setBeneficiarioId] = useState<string | null>(initBeneficiarioId || null);
   const [tipo, setTipo] = useState('');
@@ -72,6 +65,7 @@ export const NuevoCasoPage = () => {
   const [prioridad, setPrioridad] = useState<PrioridadCaso>('media');
   const [estado, setEstado] = useState<EstadoCaso>('abierto');
   const [proximaRevision, setProximaRevision] = useState('');
+  const [horaRevision, setHoraRevision] = useState('12:00:00');
   const [etiquetas, setEtiquetas] = useState<Etiqueta[]>([]);
   const [documentos, setDocumentos] = useState<DocumentoPendiente[]>([]);
 
@@ -149,7 +143,9 @@ export const NuevoCasoPage = () => {
       descripcion,
       objetivos,
       prioridad,
-      profesionalId: isDemo ? user!.id : profesionalId
+      estado,
+      profesionalId: isDemo ? user!.id : profesionalId,
+      proximaRevision: proximaRevision ? new Date(`${proximaRevision}T${horaRevision}`).toISOString() : undefined
     });
   };
 
@@ -225,7 +221,7 @@ export const NuevoCasoPage = () => {
                   <Select 
                     value={tipo} 
                     onChange={e => setTipo(e.target.value)}
-                    options={[{value:'', label:'Selecciona...'}, ...TIPOS_DE_CASO.map(t => ({value:t, label:t}))]}
+                    options={[{value:'', label:'Selecciona...'}, ...tiposCaso.map(t => ({value:t.nombre, label:t.nombre}))]}
                   />
                   {errores.tipo && <p className="text-red-500 text-xs m-0 mt-1">{errores.tipo}</p>}
                 </div>
@@ -344,9 +340,20 @@ export const NuevoCasoPage = () => {
           <Card title="Próxima revisión">
             <div className="flex flex-col gap-3">
                <Input type="date" value={proximaRevision} onChange={e => setProximaRevision(e.target.value)} />
+               {proximaRevision && (
+                 <Select 
+                   value={horaRevision}
+                   onChange={e => setHoraRevision(e.target.value)}
+                   options={[
+                     { value: '07:00:00', label: 'Mañana (07:00 AM)' },
+                     { value: '12:00:00', label: 'Mediodía (12:00 PM)' },
+                     { value: '19:00:00', label: 'Tarde (07:00 PM)' }
+                   ]}
+                 />
+               )}
                <div className="flex gap-3 items-start p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-lg text-sm border border-blue-100 dark:border-blue-800/50">
                  <span className="text-lg leading-none">ℹ️</span>
-                 <span>Se enviará una alerta automática al profesional a cargo en esa fecha.</span>
+                 <span>Se enviará una alerta automática al profesional a cargo en esa fecha y horario.</span>
                </div>
             </div>
           </Card>

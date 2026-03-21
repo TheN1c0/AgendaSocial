@@ -61,4 +61,13 @@ export const apiClient = {
     });
     return handleResponse(response);
   },
+
+  patch: async <T>(endpoint: string, body: any): Promise<T> => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify(body),
+    });
+    return handleResponse(response);
+  },
 };

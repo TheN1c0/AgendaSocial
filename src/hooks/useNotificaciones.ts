@@ -1,95 +1,55 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { notificacionesService } from '../services/notificacionesService';
 import type { Notificacion } from '../types/notificaciones.types';
 
-const NOTIFICACIONES_MOCK: Notificacion[] = [
-  {
-    id: 'N001',
-    tipo: 'revision_vencida',
-    leida: false,
-    casoId: '4512',
-    casoNumero: '#4512',
-    beneficiario: 'Ana G. Morales',
-    mensaje: 'La revisión programada para el 15/10/2023 está vencida',
-    fecha: '15/10/2023',
-    fechaRelativa: 'Hace 10 días',
-  },
-  {
-    id: 'N002',
-    tipo: 'revision_proxima',
-    leida: false,
-    casoId: '4511',
-    casoNumero: '#4511',
-    beneficiario: 'Luis J. Pérez',
-    mensaje: 'Tiene una revisión programada para el 28/10/2023',
-    fecha: '28/10/2023',
-    fechaRelativa: 'En 2 días',
-  },
-  {
-    id: 'N003',
-    tipo: 'sin_actividad',
-    leida: false,
-    casoId: '4509',
-    casoNumero: '#4509',
-    beneficiario: 'Carlos M. Soto',
-    mensaje: 'Este caso no tiene actividad hace 18 días',
-    fecha: '08/10/2023',
-    fechaRelativa: 'Hace 18 días',
-  },
-  {
-    id: 'N004',
-    tipo: 'cambio_estado',
-    leida: true,
-    casoId: '4510',
-    casoNumero: '#4510',
-    beneficiario: 'María L. Ruiz',
-    mensaje: 'Diego Rivas cambió el estado de "En proceso" a "Cerrado"',
-    fecha: '23/10/2023',
-    fechaRelativa: 'Hace 2 días',
-  },
-  {
-    id: 'N005',
-    tipo: 'revision_proxima',
-    leida: true,
-    casoId: '4508',
-    casoNumero: '#4508',
-    beneficiario: 'Rosa P. Vargas',
-    mensaje: 'Tiene una revisión programada para el 30/10/2023',
-    fecha: '30/10/2023',
-    fechaRelativa: 'En 4 días',
-  },
-];
-
-// Simple global state for the mock so TopBar and View share parity without a formal Provider
-let globalMockState = [...NOTIFICACIONES_MOCK];
-const listeners = new Set<() => void>();
-
-const updateGlobal = (newState: Notificacion[] | ((prev: Notificacion[]) => Notificacion[])) => {
-  globalMockState = typeof newState === 'function' ? newState(globalMockState) : newState;
-  listeners.forEach(l => l());
+// For legacy UI support
+const enrichNotificacion = (n: Notificacion) => {
+  const date = n.createdAt ? new Date(n.createdAt) : new Date();
+  const diffDays = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+  return {
+    ...n,
+    beneficiario: 'N/A', // The backend doesn't currently include beneficiaries on notifications to keep it lightweight.
+    fecha: date.toLocaleDateString('es-CL'),
+    fechaRelativa: diffDays === 0 ? 'Hoy' : diffDays === 1 ? 'Hace 1 día' : `Hace ${diffDays} días`,
+  };
 };
 
 export function useNotificaciones() {
-  const [notificaciones, setNotificaciones] = useState(globalMockState);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const l = () => setNotificaciones(globalMockState);
-    listeners.add(l);
-    return () => { listeners.delete(l); };
-  }, []);
+  const { data: rawNotificaciones = [] } = useQuery({
+    queryKey: ['notificaciones'],
+    queryFn: notificacionesService.getNotificaciones,
+    refetchInterval: 60000 // Poll every minute
+  });
 
+  const notificaciones = rawNotificaciones.map(enrichNotificacion);
   const noLeidas = notificaciones.filter(n => !n.leida).length;
 
-  const marcarLeida = (id: string) => {
-    updateGlobal(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
-  };
+  const leidaMutation = useMutation({
+    mutationFn: notificacionesService.marcarLeida,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+    }
+  });
 
-  const marcarTodasLeidas = () => {
-    updateGlobal(prev => prev.map(n => ({ ...n, leida: true })));
-  };
+  const todasLeidasMutation = useMutation({
+    mutationFn: notificacionesService.marcarTodasLeidas,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+    }
+  });
 
-  const eliminar = (id: string) => {
-    updateGlobal(prev => prev.filter(n => n.id !== id));
-  };
+  const eliminarMutation = useMutation({
+    mutationFn: notificacionesService.eliminar,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+    }
+  });
+
+  const marcarLeida = (id: string) => leidaMutation.mutate(id);
+  const marcarTodasLeidas = () => todasLeidasMutation.mutate();
+  const eliminar = (id: string) => eliminarMutation.mutate(id);
 
   return { notificaciones, noLeidas, marcarLeida, marcarTodasLeidas, eliminar };
 }

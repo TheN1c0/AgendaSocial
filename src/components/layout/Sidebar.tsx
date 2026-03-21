@@ -1,9 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuthContext } from '../../context/AuthContext';
 import './Sidebar.css';
 
 export const Sidebar = () => {
   const { theme, toggleTheme } = useTheme();
+  const { logout } = useAuthContext();
   const location = useLocation();
 
   const isCurrent = (path: string) => location.pathname === path;
@@ -41,6 +43,15 @@ export const Sidebar = () => {
           <span>Notificaciones</span>
         </Link>
       </nav>
+
+      <button 
+        onClick={logout} 
+        className="nav-item w-full"
+        style={{ background: 'transparent', border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', textAlign: 'left', color: 'inherit', padding: '1rem 1.5rem' }}
+      >
+        <span className="nav-icon">🚪</span>
+        <span style={{ fontWeight: 600 }}>Cerrar sesión</span>
+      </button>
 
       <div className="sidebar-footer">
         <div className="theme-toggle-wrapper">
