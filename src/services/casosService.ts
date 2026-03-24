@@ -18,6 +18,7 @@ export const casosService = {
     if (params.estado) searchParams.append('estado', params.estado);
     if (params.prioridad) searchParams.append('prioridad', params.prioridad);
     if (params.profesional) searchParams.append('profesionalId', params.profesional);
+    if (params.etiquetaId) searchParams.append('etiquetaId', params.etiquetaId);
     if (params.page) searchParams.append('page', String(params.page));
     if (params.limit) searchParams.append('limit', String(params.limit));
 

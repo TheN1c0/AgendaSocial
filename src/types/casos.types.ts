@@ -16,6 +16,7 @@ export interface Caso {
   profesionalInicial?: string;
   fechaIngreso: string;
   ultimaActividad: string;
+  etiquetas?: Array<{ id: string; nombre: string; color: string; }>;
 }
 
 export interface CasoDetalle extends Omit<Caso, 'beneficiario' | 'profesional'> {
@@ -67,6 +68,7 @@ export interface FiltrosCasos {
   profesional: string;
   fechaDesde: string;
   fechaHasta: string;
+  etiquetaId: string;
 }
 
 export const ESTADOS = ['abierto', 'en_proceso', 'cerrado', 'derivado'];

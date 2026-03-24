@@ -24,7 +24,11 @@ const handleResponse = async (response: Response) => {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `Error HTTP: ${response.status}`);
   }
-  return response.json();
+  if (response.status === 204) {
+    return null;
+  }
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 };
 
 export const apiClient = {

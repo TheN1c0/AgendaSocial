@@ -20,6 +20,7 @@ const filtrosIniciales: FiltrosCasos = {
   profesional: '',
   fechaDesde: '',
   fechaHasta: '',
+  etiquetaId: '',
 };
 
 const COLUMNAS_CASOS: Column[] = [
@@ -27,6 +28,7 @@ const COLUMNAS_CASOS: Column[] = [
   { id: 'beneficiario', label: 'Beneficiario' },
   { id: 'estado', label: 'Estado' },
   { id: 'prioridad', label: 'Prioridad' },
+  { id: 'etiquetas', label: 'Etiquetas' },
   { id: 'profesional', label: 'Profesional' },
   { id: 'fechaIngreso', label: 'Ingreso' },
   { id: 'ultimaActividad', label: 'Última actividad' },
@@ -44,6 +46,7 @@ export const CasosPage = () => {
     busqueda: searchParams.get('busqueda') || '',
     profesional: searchParams.get('profesional') || '',
     prioridad: (searchParams.get('prioridad') as PrioridadCaso) || '',
+    etiquetaId: searchParams.get('etiquetaId') || '',
   }));
 
   const [vista, setVista] = useState<'tabla' | 'tarjetas'>('tabla');
@@ -70,6 +73,7 @@ export const CasosPage = () => {
       estado: filtros.estado, 
       prioridad: filtros.prioridad, 
       profesional: filtros.profesional, 
+      etiquetaId: filtros.etiquetaId,
       paginaActual 
     }],
     queryFn: () => casosService.getCasos({
@@ -77,6 +81,7 @@ export const CasosPage = () => {
       estado: filtros.estado,
       prioridad: filtros.prioridad,
       profesional: filtros.profesional,
+      etiquetaId: filtros.etiquetaId,
       page: paginaActual,
       limit: ITEMS_POR_PAGINA
     })
@@ -129,6 +134,7 @@ export const CasosPage = () => {
       profesional: c.asignadoA?.nombre || 'Sin asignar',
       fechaIngreso: c.createdAt ? new Date(c.createdAt).toLocaleDateString('es-CL') : '-',
       ultimaActividad: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('es-CL') : '-',
+      etiquetas: c.etiquetas?.map((e: any) => e.etiqueta) || [],
     }));
 
     if (ordenColumna) {

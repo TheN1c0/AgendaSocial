@@ -127,6 +127,11 @@ export const CasosTabla = ({
                     Prioridad <SortArrow column="prioridad" />
                   </th>
                 )}
+                {visibleColumns.includes('etiquetas') && (
+                  <th style={{ width: '180px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-left">
+                    Etiquetas
+                  </th>
+                )}
                 {visibleColumns.includes('profesional') && (
                   <th style={{ width: '140px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('profesional')}>
                     Profesional <SortArrow column="profesional" />
@@ -190,6 +195,45 @@ export const CasosTabla = ({
                       </Badge>
                     </td>
                   )}
+                  {visibleColumns.includes('etiquetas') && (
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        {c.etiquetas?.slice(0, 2).map((etq: any) => (
+                          <span
+                            key={etq.id}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                            style={{ 
+                              backgroundColor: `${etq.color}20`, 
+                              color: etq.color,
+                            }}
+                          >
+                            {etq.nombre}
+                          </span>
+                        ))}
+                        {c.etiquetas && c.etiquetas.length > 2 && (
+                          <div className="relative group cursor-help">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                              +{c.etiquetas.length - 2}
+                            </span>
+                            <div className="absolute z-10 hidden group-hover:flex flex-col gap-1 bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-white dark:bg-[#1a1a1a] shadow-lg rounded-lg border border-gray-100 dark:border-gray-800 min-w-max">
+                              {c.etiquetas.slice(2).map((etq: any) => (
+                                <span
+                                  key={etq.id}
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                                  style={{ 
+                                    backgroundColor: `${etq.color}20`, 
+                                    color: etq.color,
+                                  }}
+                                >
+                                  {etq.nombre}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  )}
                   {visibleColumns.includes('profesional') && (
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 overflow-hidden">
@@ -232,13 +276,40 @@ export const CasosTabla = ({
                  </div>
                </div>
 
-               <div className="flex gap-2">
+               <div className="flex flex-wrap gap-2">
                   <Badge estado={c.estado}>
                     {c.estado.replace('_', ' ').replace(/\b\w/g, char => char.toUpperCase())}
                   </Badge>
                   <Badge prioridad={c.prioridad}>
                     {c.prioridad.charAt(0).toUpperCase() + c.prioridad.slice(1)}
                   </Badge>
+                  {c.etiquetas?.slice(0, 2).map((etq: any) => (
+                    <span
+                      key={etq.id}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style={{ backgroundColor: `${etq.color}20`, color: etq.color }}
+                    >
+                      {etq.nombre}
+                    </span>
+                  ))}
+                  {c.etiquetas && c.etiquetas.length > 2 && (
+                    <div className="relative group cursor-help">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-200">
+                        +{c.etiquetas.length - 2}
+                      </span>
+                      <div className="absolute z-10 hidden group-hover:flex flex-col gap-1 bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-white dark:bg-[#1a1a1a] shadow-lg rounded-lg border border-gray-100 dark:border-gray-800 min-w-max">
+                        {c.etiquetas.slice(2).map((etq: any) => (
+                          <span
+                            key={etq.id}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                            style={{ backgroundColor: `${etq.color}20`, color: etq.color }}
+                          >
+                            {etq.nombre}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                </div>
 
                <div className="flex items-center gap-2 mt-1">

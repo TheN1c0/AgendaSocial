@@ -5,6 +5,7 @@ import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { Button } from '../ui/Button';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useEtiquetas } from '../../hooks/useEtiquetas';
 
 interface CasosFiltrosProps {
   filtros: FiltrosCasos;
@@ -15,6 +16,7 @@ interface CasosFiltrosProps {
 export const CasosFiltros = ({ filtros, onChange, onClear }: CasosFiltrosProps) => {
   const [localBusqueda, setLocalBusqueda] = useState(filtros.busqueda);
   const debouncedBusqueda = useDebounce(localBusqueda, 300);
+  const { etiquetas } = useEtiquetas();
 
   // Sync debounced search up
   useEffect(() => {
@@ -34,7 +36,8 @@ export const CasosFiltros = ({ filtros, onChange, onClear }: CasosFiltrosProps) 
     (filtros.prioridad ? 1 : 0) +
     (filtros.profesional ? 1 : 0) +
     (filtros.fechaDesde ? 1 : 0) +
-    (filtros.fechaHasta ? 1 : 0);
+    (filtros.fechaHasta ? 1 : 0) +
+    (filtros.etiquetaId ? 1 : 0);
 
   const getLabel = (type: string, val: string) => {
     if (type === 'estado') {
@@ -47,6 +50,10 @@ export const CasosFiltros = ({ filtros, onChange, onClear }: CasosFiltrosProps) 
     if (type === 'busqueda') return `Búsqueda: "${val}"`;
     if (type === 'fechaDesde') return `Desde: ${val}`;
     if (type === 'fechaHasta') return `Hasta: ${val}`;
+    if (type === 'etiquetaId') {
+      const etq = etiquetas.find((e: any) => e.id === val);
+      return `Etiqueta: ${etq ? etq.nombre : val}`;
+    }
     return val;
   };
 
@@ -68,7 +75,7 @@ export const CasosFiltros = ({ filtros, onChange, onClear }: CasosFiltrosProps) 
         </div>
 
         {/* Dropdowns */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-[2]">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 flex-[3]">
           <Select 
             value={filtros.estado}
             onChange={(e) => onChange({ estado: e.target.value as EstadoCaso })}
@@ -91,6 +98,14 @@ export const CasosFiltros = ({ filtros, onChange, onClear }: CasosFiltrosProps) 
             options={[
               { value: '', label: 'Profesional' },
               ...PROFESIONALES.map(p => ({ value: p, label: p }))
+            ]}
+          />
+          <Select 
+            value={filtros.etiquetaId || ''}
+            onChange={(e) => onChange({ etiquetaId: e.target.value })}
+            options={[
+              { value: '', label: 'Todas las etiquetas' },
+              ...etiquetas.map((e: any) => ({ value: e.id, label: e.nombre }))
             ]}
           />
           <Button variant="secondary" onClick={onClear} className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">

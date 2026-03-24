@@ -9,18 +9,18 @@ export interface Etiqueta {
 
 export const etiquetasService = {
   getEtiquetas: async (): Promise<Etiqueta[]> => {
-    const response = await apiClient.get('/etiquetas');
-    return (response as any).data;
+    const response = await apiClient.get<Etiqueta[]>('/etiquetas');
+    return response;
   },
 
   createEtiqueta: async (data: { nombre: string; color: string }): Promise<Etiqueta> => {
-    const response = await apiClient.post('/etiquetas', data);
-    return (response as any).data;
+    const response = await apiClient.post<Etiqueta>('/etiquetas', data);
+    return response;
   },
 
   updateEtiqueta: async (id: string, data: { nombre?: string; color?: string }): Promise<Etiqueta> => {
-    const response = await apiClient.put(`/etiquetas/${id}`, data);
-    return (response as any).data;
+    const response = await apiClient.put<Etiqueta>(`/etiquetas/${id}`, data);
+    return response;
   },
 
   deleteEtiqueta: async (id: string): Promise<void> => {

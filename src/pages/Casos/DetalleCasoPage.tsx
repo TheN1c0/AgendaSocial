@@ -98,11 +98,14 @@ export const DetalleCasoPage = () => {
           <div className="flex flex-wrap items-center gap-2">
             <Badge estado={caso.estado}>{caso.estado.replace('_', ' ').replace(/\b\w/g, (char: string) => char.toUpperCase())}</Badge>
             <Badge prioridad={caso.prioridad as any}>{caso.prioridad.charAt(0).toUpperCase() + caso.prioridad.slice(1)}</Badge>
-            {caso.etiquetas?.map((eti: any) => (
-              <span key={eti.id} className="text-xs px-2 py-0.5 rounded-full text-white font-medium" style={{ backgroundColor: eti.color || '#primary' }}>
-                {eti.nombre}
-              </span>
-            ))}
+            {caso.etiquetas?.map((etqCaso: any) => {
+              const eti = etqCaso.etiqueta || etqCaso;
+              return (
+                <span key={eti.id} className="text-xs px-2 py-0.5 rounded-full text-white font-medium" style={{ backgroundColor: eti.color || '#primary' }}>
+                  {eti.nombre}
+                </span>
+              );
+            })}
           </div>
         </div>
         <div className="flex gap-3">

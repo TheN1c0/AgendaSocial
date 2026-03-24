@@ -44,10 +44,14 @@ export const ConfiguracionPage = () => {
     }
   }, [tabQuery, isAdmin, setSearchParams]);
 
-  const { etiquetas, create: createEtiqueta, delete: deleteEtiqueta, isCreating: isCreatingEtiqueta, isDeleting: isDeletingEtiqueta } = useEtiquetas();
+  const { etiquetas, create: createEtiqueta, update: updateEtiqueta, delete: deleteEtiqueta, isCreating: isCreatingEtiqueta, isUpdating: isUpdatingEtiqueta, isDeleting: isDeletingEtiqueta } = useEtiquetas();
   const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
   const [nuevoColor, setNuevoColor] = useState('#378ADD');
   const [showFormEtiqueta, setShowFormEtiqueta] = useState(false);
+  
+  const [etiquetaEditandoId, setEtiquetaEditandoId] = useState<string | null>(null);
+  const [editNombre, setEditNombre] = useState('');
+  const [editColor, setEditColor] = useState('');
 
   useEffect(() => {
     document.title = 'Configuración | Agenda Social';
@@ -89,6 +93,17 @@ export const ConfiguracionPage = () => {
       setShowFormEtiqueta(false);
     } catch (err: any) {
       setApiError(err.message || 'Error al crear registro');
+    }
+  };
+
+  const handleSaveEtiqueta = async () => {
+    if (!etiquetaEditandoId || !editNombre.trim()) return;
+    setApiError('');
+    try {
+      await updateEtiqueta({ id: etiquetaEditandoId, data: { nombre: editNombre, color: editColor } });
+      setEtiquetaEditandoId(null);
+    } catch (err: any) {
+      setApiError(err.message || 'Error al actualizar etiqueta');
     }
   };
 
@@ -227,21 +242,51 @@ export const ConfiguracionPage = () => {
                    <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">Vista de lista completa</h4>
                    <div className="border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
                      {etiquetas.map((e: any) => (
-                        <div key={e.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 border-b last:border-b-0 border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#242424] gap-2 transition-colors">
-                          <div className="flex items-center gap-3 w-1/3">
-                            <span style={{ color: e.color }} className="text-lg leading-none">●</span>
-                            <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{e.nombre}</span>
-                          </div>
-                          
-                          <div className="flex gap-4 items-center justify-between w-full sm:w-2/3">
-                            <span className="text-xs font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">{e.color}</span>
-                            <span className="text-xs text-gray-500 flex-1 ml-4 hidden sm:block">Usada en {e.usada} casos</span>
-                            
-                            <div className="flex gap-2 shrink-0">
-                              <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-transparent border-none cursor-pointer" title="Editar">✏️</button>
-                              <button onClick={() => removeEtiqueta(e.id, e.usada)} className="text-gray-400 hover:text-red-500 bg-transparent border-none cursor-pointer" title="Eliminar">🗑</button>
+                        <div key={e.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 border-b last:border-b-0 border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#242424] gap-2 transition-colors min-h-[56px]">
+                          {etiquetaEditandoId === e.id ? (
+                            <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center w-full">
+                              <input 
+                                type="color" 
+                                value={editColor} 
+                                onChange={ev => setEditColor(ev.target.value)} 
+                                className="w-8 h-8 p-0 border border-gray-300 dark:border-gray-700 rounded cursor-pointer bg-white dark:bg-[#242424] shrink-0"
+                              />
+                              <Input 
+                                placeholder="Nombre de etiqueta..."
+                                value={editNombre} 
+                                onChange={ev => setEditNombre(ev.target.value)} 
+                                style={{ marginBottom: 0, padding: '0.35rem 0.5rem' }}
+                                className="flex-1 min-w-[150px]"
+                                autoFocus
+                                onKeyDown={ev => { if (ev.key === 'Enter') handleSaveEtiqueta(); if (ev.key === 'Escape') setEtiquetaEditandoId(null); }}
+                              />
+                              <div className="flex gap-2 shrink-0 ml-auto">
+                                <Button variant="primary" style={{ padding: '0.35rem 0.75rem' }} onClick={handleSaveEtiqueta} disabled={isUpdatingEtiqueta || !editNombre.trim()}>
+                                  {isUpdatingEtiqueta ? '...' : 'Guardar'}
+                                </Button>
+                                <Button variant="secondary" style={{ padding: '0.35rem 0.75rem' }} onClick={() => setEtiquetaEditandoId(null)}>
+                                  Cancelar
+                                </Button>
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-3 w-1/3">
+                                <span style={{ color: e.color }} className="text-lg leading-none">●</span>
+                                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{e.nombre}</span>
+                              </div>
+                              
+                              <div className="flex gap-4 items-center justify-between w-full sm:w-2/3">
+                                <span className="text-xs font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">{e.color}</span>
+                                <span className="text-xs text-gray-500 flex-1 ml-4 hidden sm:block">Usada en {e.usada} casos</span>
+                                
+                                <div className="flex gap-2 shrink-0">
+                                  <button onClick={() => { setEtiquetaEditandoId(e.id); setEditNombre(e.nombre); setEditColor(e.color); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-transparent border-none cursor-pointer" title="Editar">✏️</button>
+                                  <button onClick={() => removeEtiqueta(e.id, e.usada)} className="text-gray-400 hover:text-red-500 bg-transparent border-none cursor-pointer" title="Eliminar">🗑</button>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                      ))}
                    </div>
