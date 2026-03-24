@@ -11,6 +11,7 @@ import { userService } from '../../services/userService';
 import { useAuthContext } from '../../context/AuthContext';
 import type { PrioridadCaso, EstadoCaso } from '../../types/casos.types';
 import { useTiposCaso } from '../../hooks/useTiposCaso';
+import { useEtiquetas } from '../../hooks/useEtiquetas';
 import { casosService } from '../../services/casosService';
 
 interface Etiqueta {
@@ -58,7 +59,9 @@ export const EditarCasoPage = () => {
   const [estado, setEstado] = useState<EstadoCaso>('abierto');
   const [proximaRevision, setProximaRevision] = useState('');
   const [horaRevision, setHoraRevision] = useState('12:00:00');
-  const [etiquetas, setEtiquetas] = useState<Etiqueta[]>([]);
+  const [etiquetas, setEtiquetas] = useState<string[]>([]);
+
+  const { etiquetas: disponibles, isLoading: isLoadingEtiquetas } = useEtiquetas();
 
   // UI state
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -86,11 +89,7 @@ export const EditarCasoPage = () => {
       }
       
       if (caso.etiquetas) {
-        setEtiquetas(caso.etiquetas.map((e: any) => ({
-          id: e.etiqueta.id,
-          nombre: e.etiqueta.nombre,
-          color: e.etiqueta.color || '#C97A8A'
-        })));
+        setEtiquetas(caso.etiquetas.map((e: any) => e.etiqueta.id));
       }
     }
   }, [caso]);
@@ -149,15 +148,16 @@ export const EditarCasoPage = () => {
       estado,
       profesionalId: isDemo ? user!.id : profesionalId,
       proximaRevision: proximaRevision ? new Date(`${proximaRevision}T${horaRevision}`).toISOString() : null,
-      // Pass the etiqueta UUIDs to link/unlink
-      etiquetas: etiquetas.filter(e => e.id.length > 10).map(e => e.id) // simplistic check assuming real tags have proper UUIDs while temporary ones don't
+      etiquetas
     });
   };
 
-
-
-  const removeEtiqueta = (id: string) => {
-    setEtiquetas(etiquetas.filter(e => e.id !== id));
+  const toggleEtiqueta = (id: string) => {
+    if (etiquetas.includes(id)) {
+      setEtiquetas(etiquetas.filter(eId => eId !== id));
+    } else {
+      setEtiquetas([...etiquetas, id]);
+    }
   };
 
   if (isCasoLoading) return <div className="p-12 text-center text-gray-500">Cargando datos del caso...</div>;
@@ -188,7 +188,7 @@ export const EditarCasoPage = () => {
         {/* COLUMNA PRINCIPAL 2/3 */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           
-          <Card title="Beneficiario">
+          <Card title="Beneficiario" overflowVisible>
             <div className="flex flex-col gap-3">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Seleccionar beneficiario *</label>
               <BeneficiarioBuscador 
@@ -321,14 +321,33 @@ export const EditarCasoPage = () => {
 
           <Card title="Etiquetas visuales">
             <div className="flex flex-col gap-4">
-              {etiquetas.length > 0 && (
+              <span className="text-sm text-gray-500">Selecciona las etiquetas (definidas en Configuración)</span>
+              
+              {isLoadingEtiquetas ? (
+                <span className="text-sm text-gray-400">Cargando...</span>
+              ) : disponibles.length === 0 ? (
+                <span className="text-sm text-gray-400">No tienes etiquetas creadas.</span>
+              ) : (
                 <div className="flex flex-wrap gap-2">
-                  {etiquetas.map(e => (
-                    <span key={e.id} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full text-white font-medium" style={{ backgroundColor: e.color || '#C97A8A' }}>
-                      {e.nombre}
-                      <button onClick={() => removeEtiqueta(e.id)} className="ml-1 opacity-70 hover:opacity-100 text-white bg-transparent border-none cursor-pointer leading-none p-0">×</button>
-                    </span>
-                  ))}
+                  {disponibles.map((e: any) => {
+                    const isSelected = etiquetas.includes(e.id);
+                    return (
+                      <span 
+                        key={e.id} 
+                        onClick={() => toggleEtiqueta(e.id)}
+                        className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full cursor-pointer font-medium transition-all ${
+                          isSelected ? 'text-white shadow-md ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#1a1a1a]' : 'opacity-60 hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`} 
+                        style={{ 
+                          backgroundColor: isSelected ? e.color : 'transparent',
+                          color: isSelected ? 'white' : e.color,
+                          border: `1px solid ${e.color}`
+                        }}
+                      >
+                        {e.nombre}
+                      </span>
+                    )
+                  })}
                 </div>
               )}
             </div>

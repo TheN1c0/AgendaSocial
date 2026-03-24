@@ -8,14 +8,7 @@ import { PreferenciasForm } from '../../components/ui/PreferenciasForm';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useTiposCaso } from '../../hooks/useTiposCaso';
-
-const ETIQUETAS_DEFAULT = [
-  { id: 'E001', nombre: 'Urgente',  color: '#E24B4A', usada: 3 },
-  { id: 'E002', nombre: 'Familia',  color: '#1D9E75', usada: 5 },
-  { id: 'E003', nombre: 'Vivienda', color: '#378ADD', usada: 2 },
-  { id: 'E004', nombre: 'Empleo',   color: '#BA7517', usada: 1 },
-  { id: 'E005', nombre: 'Salud',    color: '#534AB7', usada: 4 },
-];
+import { useEtiquetas } from '../../hooks/useEtiquetas';
 
 const USUARIOS_MOCK = [
   { id: 'U001', nombre: 'Marta Gómez',  email: 'marta@tuapp.cl', rol: 'trabajador_social', activo: true },
@@ -51,10 +44,10 @@ export const ConfiguracionPage = () => {
     }
   }, [tabQuery, isAdmin, setSearchParams]);
 
-  const [etiquetas, setEtiquetas] = useState(() => {
-    const saved = localStorage.getItem('config-etiquetas');
-    return saved ? JSON.parse(saved) : ETIQUETAS_DEFAULT;
-  });
+  const { etiquetas, create: createEtiqueta, delete: deleteEtiqueta, isCreating: isCreatingEtiqueta, isDeleting: isDeletingEtiqueta } = useEtiquetas();
+  const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
+  const [nuevoColor, setNuevoColor] = useState('#378ADD');
+  const [showFormEtiqueta, setShowFormEtiqueta] = useState(false);
 
   useEffect(() => {
     document.title = 'Configuración | Agenda Social';
@@ -87,15 +80,29 @@ export const ConfiguracionPage = () => {
     }
   };
 
-  const removeEtiqueta = (id: string, usada: number) => {
+  const handleCrearEtiqueta = async () => {
+    if (!nuevaEtiqueta.trim()) return;
+    setApiError('');
+    try {
+      await createEtiqueta({ nombre: nuevaEtiqueta, color: nuevoColor });
+      setNuevaEtiqueta('');
+      setShowFormEtiqueta(false);
+    } catch (err: any) {
+      setApiError(err.message || 'Error al crear registro');
+    }
+  };
+
+  const removeEtiqueta = async (id: string, usada: number) => {
     if (usada > 0) {
       alert(`⚠️ Esta etiqueta está en uso en ${usada} casos. No se puede eliminar.`);
       return;
     }
-    if (window.confirm('¿Eliminar etiqueta?')) {
-      const next = etiquetas.filter((e: any) => e.id !== id);
-      setEtiquetas(next);
-      localStorage.setItem('config-etiquetas', JSON.stringify(next));
+    if (window.confirm('¿Eliminar etiqueta de forma permanente?')) {
+      try {
+        await deleteEtiqueta(id);
+      } catch (err: any) {
+        setApiError(err.message || 'Error al eliminar etiqueta');
+      }
     }
   };
 
@@ -176,10 +183,39 @@ export const ConfiguracionPage = () => {
                      <h3 className="m-0 text-lg font-bold text-gray-900 dark:text-gray-100">Etiquetas Visuales</h3>
                      <p className="text-sm text-gray-500 m-0 mt-1">Organiza y colorea los casos rápidamente.</p>
                    </div>
-                   <Button variant="secondary" onClick={() => alert('Abrir modal Crear Etiqueta')}>+ Nueva etiqueta</Button>
+                   <Button variant="secondary" onClick={() => setShowFormEtiqueta(!showFormEtiqueta)}>
+                     {showFormEtiqueta ? 'Cancelar' : '+ Nueva etiqueta'}
+                   </Button>
                 </div>
 
-                <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-100 dark:border-gray-800">
+                 {apiError && (
+                   <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm border border-red-200 dark:border-red-800/50 flex align-center gap-2 mb-4 mt-4">
+                     <span className="font-bold">Error:</span> {apiError}
+                   </div>
+                 )}
+
+                 {showFormEtiqueta && (
+                   <div className="flex gap-2 items-center p-3 mb-4 mt-4 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-100 dark:border-gray-800">
+                     <input 
+                       type="color" 
+                       value={nuevoColor} 
+                       onChange={e => setNuevoColor(e.target.value)} 
+                       className="w-10 h-10 p-1 border border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer bg-white dark:bg-[#242424]"
+                     />
+                     <Input 
+                       placeholder="Nombre de la viñeta..." 
+                       value={nuevaEtiqueta} 
+                       onChange={e => setNuevaEtiqueta(e.target.value)} 
+                       style={{ marginBottom: 0 }}
+                       onKeyDown={e => { if (e.key === 'Enter') handleCrearEtiqueta(); }}
+                     />
+                     <Button variant="primary" onClick={handleCrearEtiqueta} disabled={isCreatingEtiqueta || !nuevaEtiqueta.trim()}>
+                       {isCreatingEtiqueta ? 'Guardando...' : 'Guardar'}
+                     </Button>
+                   </div>
+                 )}
+
+                 <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-100 dark:border-gray-800">
                   {etiquetas.map((e: any) => (
                     <span key={e.id} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full text-white font-medium" style={{ backgroundColor: e.color }}>
                       {e.nombre} <span className="opacity-50 text-[10px]">●</span>

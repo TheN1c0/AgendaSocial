@@ -59,6 +59,9 @@ export const BeneficiariosPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['beneficiarios'] });
       setModalNuevo(false);
+    },
+    onError: (error: any) => {
+      alert(error.message || 'Error al crear el beneficiario');
     }
   });
 
