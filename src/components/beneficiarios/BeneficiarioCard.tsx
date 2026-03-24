@@ -4,9 +4,10 @@ import type { Beneficiario } from '../../types/beneficiarios.types';
 
 interface BeneficiarioCardProps {
   beneficiario: Beneficiario;
+  onDelete?: (id: string) => void;
 }
 
-export const BeneficiarioCard = ({ beneficiario: b }: BeneficiarioCardProps) => {
+export const BeneficiarioCard = ({ beneficiario: b, onDelete }: BeneficiarioCardProps) => {
   return (
     <div className="bg-white dark:bg-[#242424] border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm hover:border-primary/50 transition-colors flex flex-col gap-4">
       <div className="flex items-center gap-4">
@@ -45,9 +46,24 @@ export const BeneficiarioCard = ({ beneficiario: b }: BeneficiarioCardProps) => 
         <Link to={`/beneficiarios/${b.id}`} className="text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#333] transition-colors">
           Ver ficha
         </Link>
-        <Link to={`/casos?beneficiarioId=${b.id}`} className="text-sm font-medium border border-primary text-primary rounded-lg px-3 py-2 text-center hover:bg-primary/5 transition-colors">
-          Ver sus casos &rarr;
-        </Link>
+        <div className="flex gap-2">
+          <Link to={`/casos?beneficiarioId=${b.id}`} className="flex-1 text-sm font-medium border border-primary text-primary rounded-lg px-3 py-2 text-center hover:bg-primary/5 transition-colors">
+            Ver sus casos &rarr;
+          </Link>
+          {onDelete && (
+            <button
+              onClick={() => {
+                if (window.confirm(`¿Estás seguro de que deseas enviar a la papelera al beneficiario ${b.nombre}? Podrá ser recuperado posteriormente si es necesario.`)) {
+                  onDelete(b.id);
+                }
+              }}
+              className="text-sm font-medium border border-red-200 text-red-500 rounded-lg px-3 py-2 text-center hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20 transition-colors bg-transparent cursor-pointer"
+              title="Enviar a papelera"
+            >
+              🗑️
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

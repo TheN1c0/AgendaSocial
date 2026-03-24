@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
@@ -10,19 +11,33 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [isDemoPending, setIsDemoPending] = useState(false);
   const { login } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  useEffect(() => {
+    if (isDemoPending && turnstileToken) {
+      handleLoginAction({ email: 'demo@tuapp.cl', password: 'demo1234' });
+    }
+  }, [isDemoPending, turnstileToken]);
 
   const handleLoginAction = async (credentials: { email: string, password: string }) => {
     setError('');
     try {
       setLoading(true);
-      const { token, usuario } = await authService.login(credentials);
+      const { token, usuario } = await authService.login({ ...credentials, turnstileToken });
       login(token, usuario);
       navigate('/dashboard');
     } catch (err: any) {
+      setFailedAttempts(prev => prev + 1);
       setError(err.message || 'Error al iniciar sesión');
+      setTurnstileToken(''); // Limpiar token si falla
+      setIsDemoPending(false);
     } finally {
       setLoading(false);
     }
@@ -36,10 +51,11 @@ export const LoginPage = () => {
   };
 
   const handleDemo = () => {
-    handleLoginAction({ email: 'demo@tuapp.cl', password: 'demo1234' });
+    setIsDemoPending(true);
+    setTurnstileToken('');
   };
 
-  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const needsCaptcha = failedAttempts >= 3 || isDemoPending;
 
   return (
     <div className={`min-h-screen flex flex-col justify-center items-center p-4 relative transition-colors ${isDark ? 'dark bg-[#121212]' : 'bg-[#f8f9fa]'} `}>
@@ -98,10 +114,24 @@ export const LoginPage = () => {
             />
           </div>
 
+          {needsCaptcha && (
+            <div className="flex justify-center my-1">
+              <Turnstile 
+                siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAACvP4r6jlY_ivNWC'} 
+                onSuccess={(token) => setTurnstileToken(token)}
+                options={{ theme: isDark ? 'dark' : 'light' }}
+              />
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-[#C97A8A] hover:bg-[#b06170] text-white py-2.5 rounded-lg font-medium transition-colors mt-2 text-[15px] shadow-sm cursor-pointer"
+            disabled={loading || (failedAttempts >= 3 && !turnstileToken)}
+            className={`w-full text-white py-2.5 rounded-lg font-medium transition-colors mt-2 text-[15px] shadow-sm cursor-pointer ${
+              loading || (failedAttempts >= 3 && !turnstileToken) 
+                ? 'bg-[#C97A8A]/50 cursor-not-allowed' 
+                : 'bg-[#C97A8A] hover:bg-[#b06170]'
+            }`}
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
@@ -114,11 +144,11 @@ export const LoginPage = () => {
           <button
             type="button"
             onClick={handleDemo}
-            disabled={loading}
+            disabled={loading || isDemoPending}
             className="w-full bg-white dark:bg-[#2a2a2a] border-2 border-dashed border-[#C97A8A]/40 hover:border-[#C97A8A] hover:bg-[#C97A8A]/5 text-[#C97A8A] py-2 rounded-lg font-medium transition-colors text-[14px] flex items-center justify-center gap-2 cursor-pointer mt-1"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Probar Sistema (Demo Automático)
+            {isDemoPending ? 'Verificando seguridad...' : 'Probar Sistema (Demo Automático)'}
           </button>
 
         </form>

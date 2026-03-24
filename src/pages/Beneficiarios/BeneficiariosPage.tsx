@@ -62,6 +62,20 @@ export const BeneficiariosPage = () => {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: beneficiariosService.deleteBeneficiario,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['beneficiarios'] });
+    },
+    onError: (error: any) => {
+      alert(error.message || 'Error al eliminar beneficiario');
+    }
+  });
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
+  };
+
   const beneficiariosFiltrados = useMemo(() => {
     const mapped = beneficiarios.map((b: any) => ({
       ...b,
@@ -218,13 +232,13 @@ export const BeneficiariosPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {beneficiariosFiltrados.map((b: any) => <BeneficiarioFila key={b.id} beneficiario={b} visibleColumns={visibleColumns} />)}
+                {beneficiariosFiltrados.map((b: any) => <BeneficiarioFila key={b.id} beneficiario={b} visibleColumns={visibleColumns} onDelete={handleDelete} />)}
               </tbody>
             </table>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {beneficiariosFiltrados.map((b: any) => <BeneficiarioCard key={b.id} beneficiario={b} />)}
+            {beneficiariosFiltrados.map((b: any) => <BeneficiarioCard key={b.id} beneficiario={b} onDelete={handleDelete} />)}
           </div>
         )
       )}

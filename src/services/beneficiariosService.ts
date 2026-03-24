@@ -30,5 +30,9 @@ export const beneficiariosService = {
 
   updateBeneficiario: async (id: string, data: Partial<Beneficiario>): Promise<Beneficiario> => {
     return apiClient.put<Beneficiario>(`/beneficiarios/${id}`, data);
+  },
+
+  deleteBeneficiario: async (id: string): Promise<{ message: string }> => {
+    return apiClient.delete<{ message: string }>(`/beneficiarios/${id}`);
   }
 };

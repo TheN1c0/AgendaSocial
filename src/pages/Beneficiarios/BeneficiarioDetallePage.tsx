@@ -32,6 +32,17 @@ export const BeneficiarioDetallePage = () => {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: beneficiariosService.deleteBeneficiario,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['beneficiarios'] });
+      navigate('/beneficiarios');
+    },
+    onError: (error: any) => {
+      alert(error.message || 'Error al eliminar beneficiario');
+    }
+  });
+
   useEffect(() => {
     if (beneficiario) {
       document.title = `${beneficiario.nombre} | Agenda Social`;
@@ -63,6 +74,12 @@ export const BeneficiarioDetallePage = () => {
   const casos = beneficiario.casos || [];
   const casosActivos = casos.filter((c: any) => c.estado !== 'cerrado' && c.estado !== 'derivado').length;
   const casosTotales = casos.length;
+
+  const handleDelete = () => {
+    if (window.confirm(`¿Estás seguro de que deseas enviar a la papelera al beneficiario ${beneficiario.nombre}? Podrá ser recuperado posteriormente si es necesario.`)) {
+      deleteMutation.mutate(id!);
+    }
+  };
   
   // Try to determine the main assigned professional from the most recent active case
   const casoReciente = casos[0];
@@ -237,6 +254,9 @@ export const BeneficiarioDetallePage = () => {
                 </Button>
                 <Button variant="secondary" onClick={() => navigate(`/casos?beneficiario=${beneficiario.id}`)} className="w-full">
                   Ver todos sus casos →
+                </Button>
+                <Button variant="secondary" onClick={handleDelete} className="w-full text-red-500 hover:bg-red-50 hover:text-red-700 hover:border-red-200 dark:hover:bg-red-900/20 dark:hover:border-red-800" disabled={deleteMutation.isPending}>
+                  {deleteMutation.isPending ? 'Enviando a papelera...' : '🗑️ Enviar a papelera'}
                 </Button>
               </div>
             </div>

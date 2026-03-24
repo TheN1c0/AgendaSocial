@@ -5,9 +5,10 @@ import type { Beneficiario } from '../../types/beneficiarios.types';
 interface BeneficiarioFilaProps {
   beneficiario: Beneficiario;
   visibleColumns: string[];
+  onDelete?: (id: string) => void;
 }
 
-export const BeneficiarioFila = ({ beneficiario: b, visibleColumns }: BeneficiarioFilaProps) => {
+export const BeneficiarioFila = ({ beneficiario: b, visibleColumns, onDelete }: BeneficiarioFilaProps) => {
   return (
     <tr className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0">
       {visibleColumns.includes('nombre') && (
@@ -52,6 +53,18 @@ export const BeneficiarioFila = ({ beneficiario: b, visibleColumns }: Beneficiar
              <Link to={`/casos?beneficiarioId=${b.id}`} className="text-xs font-medium px-2 py-1 text-primary hover:bg-primary/10 rounded transition-colors whitespace-nowrap">
                Casos →
              </Link>
+             {onDelete && (
+               <button 
+                 onClick={() => {
+                   if (window.confirm(`¿Estás seguro de que deseas enviar a la papelera al beneficiario ${b.nombre}? Podrá ser recuperado posteriormente si es necesario.`)) {
+                     onDelete(b.id);
+                   }
+                 }}
+                 className="text-xs font-medium px-2 py-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors whitespace-nowrap border-none bg-transparent cursor-pointer ml-1"
+               >
+                 🗑️
+               </button>
+             )}
           </div>
         </td>
       )}
