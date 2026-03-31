@@ -26,6 +26,7 @@ const filtrosIniciales: FiltrosCasos = {
 const COLUMNAS_CASOS: Column[] = [
   { id: 'id', label: 'ID' },
   { id: 'beneficiario', label: 'Beneficiario' },
+  { id: 'tipo', label: 'Tipo de caso' },
   { id: 'estado', label: 'Estado' },
   { id: 'prioridad', label: 'Prioridad' },
   { id: 'etiquetas', label: 'Etiquetas' },

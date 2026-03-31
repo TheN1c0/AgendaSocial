@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Caso } from '../../types/casos.types';
 import { Badge } from '../ui/Badge';
@@ -39,10 +40,62 @@ export const CasosTabla = ({
 
   const allSelected = casos.length > 0 && seleccionados.length === casos.length;
   
+  const [colWidths, setColWidths] = useState<Record<string, number>>({
+    checkbox: 40,
+    id: 70,
+    beneficiario: 180,
+    tipo: 120,
+    estado: 120,
+    prioridad: 100,
+    etiquetas: 180,
+    profesional: 140,
+    fechaIngreso: 100,
+    ultimaActividad: 120,
+    acciones: 100
+  });
+
+  const handleMouseDown = (e: React.MouseEvent, colKey: string) => {
+    e.preventDefault();
+    const startX = e.pageX;
+    const startWidth = colWidths[colKey];
+
+    const handleMouseMove = (mouseMoveEvent: globalThis.MouseEvent) => {
+      const newWidth = Math.max(50, startWidth + (mouseMoveEvent.pageX - startX));
+      setColWidths(prev => ({ ...prev, [colKey]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   const SortArrow = ({ column }: { column: keyof Caso }) => {
     if (ordenColumna !== column) return <span className="text-gray-300 dark:text-gray-600 ml-1">↕</span>;
     return <span className="text-primary ml-1">{ordenDireccion === 'asc' ? '↑' : '↓'}</span>;
   };
+
+  const ResizableTh = ({ id, label, sortable = false, textCenter = false }: { id: string, label: string, sortable?: boolean, textCenter?: boolean }) => (
+    <th style={{ width: colWidths[id] }} className={`px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 relative group ${textCenter ? 'text-center' : 'text-left'}`}>
+      {sortable ? (
+        <span className="cursor-pointer hover:text-gray-700 flex items-center" onClick={() => onOrdenChange(id as keyof Caso)}>
+          {label} <SortArrow column={id as keyof Caso} />
+        </span>
+      ) : (
+        <span>{label}</span>
+      )}
+      <div 
+        onMouseDown={(e) => handleMouseDown(e, id)} 
+        className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize z-10 flex justify-center hover:bg-gray-100 dark:hover:bg-gray-700/50"
+        style={{ transform: 'translateX(50%)' }}
+      >
+        <div className="w-px h-full bg-gray-300 dark:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </th>
+  );
 
   const renderPagination = () => (
     <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] rounded-b-xl">
@@ -99,59 +152,31 @@ export const CasosTabla = ({
           <table className="w-full text-left text-sm whitespace-nowrap" style={{ tableLayout: 'fixed', minWidth: '900px' }}>
             <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400">
               <tr>
-                <th style={{ width: '36px' }} className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                <th style={{ width: colWidths['checkbox'] }} className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 relative group text-left">
                   <input 
                     type="checkbox" 
                     checked={allSelected}
                     onChange={(e) => onSelectAll(e.target.checked)}
                     className="rounded text-primary focus:ring-primary dark:bg-gray-700 border-gray-300 dark:border-gray-600 cursor-pointer"
                   />
+                  <div 
+                    onMouseDown={(e) => handleMouseDown(e, 'checkbox')} 
+                    className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize z-10 flex justify-center hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                    style={{ transform: 'translateX(50%)' }}
+                  >
+                    <div className="w-px h-full bg-gray-300 dark:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </th>
-                {visibleColumns.includes('id') && (
-                  <th style={{ width: '70px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('id')}>
-                    ID <SortArrow column="id" />
-                  </th>
-                )}
-                {visibleColumns.includes('beneficiario') && (
-                  <th style={{ width: '160px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('beneficiario')}>
-                    Beneficiario <SortArrow column="beneficiario" />
-                  </th>
-                )}
-                {visibleColumns.includes('estado') && (
-                  <th style={{ width: '110px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('estado')}>
-                    Estado <SortArrow column="estado" />
-                  </th>
-                )}
-                {visibleColumns.includes('prioridad') && (
-                  <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('prioridad')}>
-                    Prioridad <SortArrow column="prioridad" />
-                  </th>
-                )}
-                {visibleColumns.includes('etiquetas') && (
-                  <th style={{ width: '180px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-left">
-                    Etiquetas
-                  </th>
-                )}
-                {visibleColumns.includes('profesional') && (
-                  <th style={{ width: '140px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('profesional')}>
-                    Profesional <SortArrow column="profesional" />
-                  </th>
-                )}
-                {visibleColumns.includes('fechaIngreso') && (
-                  <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('fechaIngreso')}>
-                    Ingreso <SortArrow column="fechaIngreso" />
-                  </th>
-                )}
-                {visibleColumns.includes('ultimaActividad') && (
-                  <th style={{ width: '110px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:text-gray-700" onClick={() => onOrdenChange('ultimaActividad')}>
-                    Últ. actividad <SortArrow column="ultimaActividad" />
-                  </th>
-                )}
-                {visibleColumns.includes('acciones') && (
-                  <th style={{ width: '90px' }} className="px-4 py-3 font-semibold border-b border-gray-100 dark:border-gray-800 text-center">
-                    Acciones
-                  </th>
-                )}
+                {visibleColumns.includes('id') && <ResizableTh id="id" label="ID" sortable />}
+                {visibleColumns.includes('beneficiario') && <ResizableTh id="beneficiario" label="Beneficiario" sortable />}
+                {visibleColumns.includes('tipo') && <ResizableTh id="tipo" label="Tipo" sortable />}
+                {visibleColumns.includes('estado') && <ResizableTh id="estado" label="Estado" sortable />}
+                {visibleColumns.includes('prioridad') && <ResizableTh id="prioridad" label="Prioridad" sortable />}
+                {visibleColumns.includes('etiquetas') && <ResizableTh id="etiquetas" label="Etiquetas" />}
+                {visibleColumns.includes('profesional') && <ResizableTh id="profesional" label="Profesional" sortable />}
+                {visibleColumns.includes('fechaIngreso') && <ResizableTh id="fechaIngreso" label="Ingreso" sortable />}
+                {visibleColumns.includes('ultimaActividad') && <ResizableTh id="ultimaActividad" label="Últ. actividad" sortable />}
+                {visibleColumns.includes('acciones') && <ResizableTh id="acciones" label="Acciones" textCenter />}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -179,6 +204,11 @@ export const CasosTabla = ({
                       ) : (
                         <span className="text-gray-800 dark:text-gray-200 font-medium">{c.beneficiario}</span>
                       )}
+                    </td>
+                  )}
+                  {visibleColumns.includes('tipo') && (
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                      {c.tipo}
                     </td>
                   )}
                   {visibleColumns.includes('estado') && (
