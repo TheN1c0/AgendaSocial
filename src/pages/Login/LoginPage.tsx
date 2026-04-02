@@ -76,8 +76,7 @@ export const LoginPage = () => {
              alt="Bravo Bytes Logo" 
              className="h-[96px] w-auto transition-all" 
              style={{ 
-               mixBlendMode: isDark ? 'screen' : 'multiply',
-               filter: isDark ? 'invert(1) grayscale(100%) brightness(1.5)' : 'none'
+               filter: isDark ? 'invert(1) grayscale(100%) brightness(10)' : 'none'
              }} 
           />
         </div>
