@@ -62,8 +62,8 @@ export const LoginPage = () => {
       
       {/* HEADER SECTION */}
       <div className="text-center mb-8 mt-auto z-10 pt-12">
-        <h1 className="text-3xl font-bold text-[#8c3a4f] dark:text-[#C97A8A] tracking-tight m-0">Gestor de Casos</h1>
-        <p className="text-gray-600 dark:text-gray-400 font-medium tracking-wide mt-1 m-0">Trabajo Social</p>
+        <h1 className="text-3xl font-bold text-[#8c3a4f] dark:text-[#C97A8A] tracking-tight m-0">Agenda Social</h1>
+        <p className="text-gray-600 dark:text-gray-400 font-medium tracking-wide mt-1 m-0">Gestor de Casos</p>
       </div>
 
       {/* LOGIN CARD */}
