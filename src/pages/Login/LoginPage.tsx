@@ -71,7 +71,15 @@ export const LoginPage = () => {
         
         {/* LOGO */}
         <div className="mb-4 flex items-center justify-center">
-          <img src="/bravo-bytes.svg" alt="Bravo Bytes Logo" className="h-[96px] w-auto" />
+          <img 
+             src="/bravo-bytes.svg" 
+             alt="Bravo Bytes Logo" 
+             className="h-[96px] w-auto transition-all" 
+             style={{ 
+               mixBlendMode: isDark ? 'screen' : 'multiply',
+               filter: isDark ? 'invert(1) grayscale(100%) brightness(1.5)' : 'none'
+             }} 
+          />
         </div>
 
         <h2 className="text-[1.1rem] text-gray-800 dark:text-gray-200 font-medium mb-6">Inicie sesión en su panel</h2>
