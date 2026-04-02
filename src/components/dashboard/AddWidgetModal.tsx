@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import type { DashboardWidget, ChartType } from '../../types/dashboard.types';
+import type { ChartType } from '../../types/dashboard.types';
 import { DonutChart, BarChart, LineChart, HorizontalBarChart } from '../charts';
 import { CHART_COLORS } from '../../types/charts.types';
 

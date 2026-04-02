@@ -14,11 +14,6 @@ import { useTiposCaso } from '../../hooks/useTiposCaso';
 import { useEtiquetas } from '../../hooks/useEtiquetas';
 import { casosService } from '../../services/casosService';
 
-interface Etiqueta {
-  id: string;
-  nombre: string;
-  color: string;
-}
 
 export const EditarCasoPage = () => {
   const navigate = useNavigate();

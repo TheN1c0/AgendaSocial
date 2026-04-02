@@ -1,9 +1,8 @@
 // Imports required at the top
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuthContext as useAuth } from '../../context/AuthContext';
 import { Tabs } from '../../components/ui/Tabs';
-import { Card } from '../../components/ui/Card';
 import { PreferenciasForm } from '../../components/ui/PreferenciasForm';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -27,7 +26,6 @@ const TAB_CONFIG = [
 export const ConfiguracionPage = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   
   const isAdmin = user?.role === 'ADMIN';
   const tabQuery = searchParams.get('tab') || 'tipos';
@@ -43,7 +41,7 @@ export const ConfiguracionPage = () => {
     }
   }, [tabQuery, isAdmin, setSearchParams]);
 
-  const { etiquetas, create: createEtiqueta, update: updateEtiqueta, delete: deleteEtiqueta, isCreating: isCreatingEtiqueta, isUpdating: isUpdatingEtiqueta, isDeleting: isDeletingEtiqueta } = useEtiquetas();
+  const { etiquetas, create: createEtiqueta, update: updateEtiqueta, delete: deleteEtiqueta, isCreating: isCreatingEtiqueta, isUpdating: isUpdatingEtiqueta } = useEtiquetas();
   const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
   const [nuevoColor, setNuevoColor] = useState('#378ADD');
   const [showFormEtiqueta, setShowFormEtiqueta] = useState(false);
@@ -336,7 +334,7 @@ export const ConfiguracionPage = () => {
                        </tr>
                      </thead>
                      <tbody>
-                       {USUARIOS_MOCK.map((u, i) => (
+                       {USUARIOS_MOCK.map((u) => (
                          <tr key={u.id} className="border-b last:border-b-0 border-gray-50 dark:border-gray-800/50 hover:bg-gray-50/50 dark:hover:bg-[#242424]/50">
                            <td className="p-3 font-medium text-gray-800 dark:text-gray-200">{u.nombre}</td>
                            <td className="p-3 text-gray-500">{u.email}</td>
@@ -367,8 +365,8 @@ export const ConfiguracionPage = () => {
                       { f: '25/10 10:30', u: 'Marta Gómez', a: 'actualizó', c: '#4511' },
                       { f: '25/10 09:15', u: 'Diego Rivas', a: 'cerró', c: '#4510' },
                       { f: '24/10 16:45', u: 'Ana Bravo', a: 'abrió', c: '#4512' },
-                    ].map((log, i) => (
-                      <div key={i} className="flex gap-4 p-3 border-b last:border-b-0 border-gray-100 dark:border-gray-800 text-sm">
+                    ].map((log, index) => (
+                      <div key={index} className="flex gap-4 p-3 border-b last:border-b-0 border-gray-100 dark:border-gray-800 text-sm">
                         <span className="text-gray-500 font-mono text-xs mt-0.5">{log.f}</span>
                         <div>
                           <span className="font-semibold text-gray-800 dark:text-gray-200">{log.u}</span>{' '}

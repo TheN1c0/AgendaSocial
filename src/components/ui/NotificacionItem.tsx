@@ -19,7 +19,7 @@ interface NotificacionItemProps {
 
 export const NotificacionItem = ({ item, onMarcarLeida, onEliminar, isDropdown = false }: NotificacionItemProps) => {
   const navigate = useNavigate();
-  const conf = CONFIG_TIPO[item.tipo];
+  const conf = CONFIG_TIPO[item.tipo as keyof typeof CONFIG_TIPO] || { icono: '🔔', color: '#eee', texto: '#333', label: 'Notificación' };
 
   const handleNav = () => {
     if (!item.leida) onMarcarLeida(item.id);
@@ -41,13 +41,11 @@ export const NotificacionItem = ({ item, onMarcarLeida, onEliminar, isDropdown =
           <span className={`font-semibold text-sm truncate ${item.leida ? 'text-gray-600 dark:text-gray-400' : ''}`} style={{ color: !item.leida ? conf.texto : 'inherit' }}>
              {conf.label}
           </span>
-          <span className="text-xs text-gray-500 whitespace-nowrap">{item.fechaRelativa}</span>
+          <span className="text-xs text-gray-500 whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
         </div>
         
         <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1.5 truncate">
-           <span className="text-primary truncate">{item.casoNumero}</span>
-           <span className="text-gray-400">·</span>
-           <span className="truncate">{item.beneficiario}</span>
+           <span className="text-primary truncate">{item.casoNumero || 'General'}</span>
         </div>
         
         <p className={`text-sm m-0 ${item.leida ? 'text-gray-500 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
