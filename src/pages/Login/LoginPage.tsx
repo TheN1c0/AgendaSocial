@@ -75,9 +75,6 @@ export const LoginPage = () => {
              src="/bravo-bytes.svg" 
              alt="Bravo Bytes Logo" 
              className="h-[96px] w-auto transition-all" 
-             style={{ 
-               filter: isDark ? 'invert(1) grayscale(100%) brightness(10)' : 'none'
-             }} 
           />
         </div>
 
@@ -162,7 +159,7 @@ export const LoginPage = () => {
 
         {/* CARD FOOTER */}
         <div className="w-full bg-[#f8f9fa] dark:bg-[#1a1a1a]/80 py-4 mt-2 border-t border-gray-100 dark:border-gray-800 flex justify-center items-center gap-2">
-          <img src="/bravobytesrosa.svg" alt="Bravo Bytes" className="h-[22px] object-contain opacity-80 mix-blend-multiply dark:mix-blend-normal" style={{ filter: isDark ? 'invert(1) opacity(0.5)' : 'none' }} />
+          <img src="/bravobytesrosa.svg" alt="Bravo Bytes" className="h-[22px] object-contain opacity-80" />
           <span className="text-[13px] font-bold text-gray-700 dark:text-gray-300 tracking-tight">bravo-bytes</span>
         </div>
 
