@@ -1,26 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
-import { Modal } from '../../components/ui/Modal';
 import { Avatar } from '../../components/ui/Avatar';
-import { useDashboardWidgets } from '../../hooks/useDashboardWidgets';
-import type { DashboardWidget, ChartType } from '../../types/dashboard.types';
-import { WidgetCard } from '../../components/dashboard/WidgetCard';
-import { WidgetConfigModal } from '../../components/dashboard/WidgetConfigModal';
-import { AddWidgetModal } from '../../components/dashboard/AddWidgetModal';
+import { Spinner } from '../../components/ui/Spinner';
 import { Link } from 'react-router-dom';
 import { dashboardService } from '../../services/dashboardService';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, LineChart, Line, XAxis, YAxis, BarChart, Bar } from 'recharts';
+import { useCasosPorEstado, useCasosPorMes, useCasosPorTipo } from '../../hooks/useEstadisticas';
+
+const COLORS_ESTADO = ['#C97A8A', '#8C4A5A', '#F7E8EC', '#6B7280'];
 
 export const DashboardPage = () => {
-  const { widgets, toggleVisibility, moveWidget, updateWidgetConfig, setWidgets } = useDashboardWidgets();
-  
-  // Modal states
-  const [isGeneralConfigOpen, setIsGeneralConfigOpen] = useState(false);
-  const [activeConfigWidget, setActiveConfigWidget] = useState<DashboardWidget | null>(null);
-  const [isAddWidgetOpen, setIsAddWidgetOpen] = useState(false);
-
   // Fetch dashboard stats
   const { data: stats } = useQuery({
     queryKey: ['dashboardStats'],
@@ -31,35 +22,19 @@ export const DashboardPage = () => {
   const ultimosCasos = stats?.ultimosCasos || [];
   const actividad = stats?.actividad || [];
 
+  const { data: dataEstado, isLoading: loadEstado, isError: errEstado } = useCasosPorEstado();
+  const { data: dataMes, isLoading: loadMes, isError: errMes } = useCasosPorMes();
+  const { data: dataTipo, isLoading: loadTipo, isError: errTipo } = useCasosPorTipo();
+
   useEffect(() => {
     document.title = 'Inicio | Agenda Social';
   }, []);
 
-  const handleAddWidget = (type: ChartType, title: string) => {
-    const newWidget: DashboardWidget = {
-      id: `widget-${Date.now()}`,
-      type,
-      title,
-      visible: true,
-      order: widgets.length,
-      config: {
-        labels: ['Dato A', 'Dato B'],
-        data: type !== 'bar' ? [10, 20] : undefined,
-        colors: type !== 'bar' ? ['#C97A8A', '#378ADD'] : undefined,
-        color: type === 'line' ? '#C97A8A' : undefined,
-        filled: type === 'line' ? true : undefined,
-        periodo: (type === 'bar' || type === 'line') ? 'mes' : undefined,
-        datasets: type === 'bar' ? [{ label: 'Serie 1', data: [10, 20], color: '#C97A8A' }] : undefined,
-      }
-    };
-    setWidgets([...widgets, newWidget]);
+  const renderContent = (isLoading: boolean, isError: boolean, renderChart: () => React.ReactNode) => {
+    if (isLoading) return <div className="h-[240px] flex items-center justify-center"><Spinner /></div>;
+    if (isError) return <div className="h-[240px] flex items-center justify-center text-sm text-gray-500">No se pudieron cargar los datos.</div>;
+    return renderChart();
   };
-
-  const handleSaveWidgetConfig = (id: string, updates: Partial<DashboardWidget>) => {
-    setWidgets(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w));
-  };
-
-  const visibleWidgets = widgets.filter(w => w.visible).sort((a, b) => a.order - b.order);
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-[1600px] mx-auto">
@@ -69,15 +44,11 @@ export const DashboardPage = () => {
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 m-0">
           Panel Administrativo <span className="text-gray-400 font-normal">- Visión General</span>
         </h1>
-        <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={() => setIsGeneralConfigOpen(true)}>⚙️ Ocultos</Button>
-          <Button variant="primary" size="sm" onClick={() => setIsAddWidgetOpen(true)}>+ Agregar gráfico</Button>
-        </div>
       </div>
 
       {/* KPIs ROW */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, idx) => (
+        {kpis.map((kpi: any, idx: number) => (
           <Card key={idx} noPadding className="p-4 flex flex-col justify-center">
             <div className="flex justify-between items-start">
               <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{kpi.label}</span>
@@ -93,10 +64,81 @@ export const DashboardPage = () => {
         ))}
       </div>
 
+      {/* CHARTS GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico 1 - Casos por estado */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+          <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4">Casos por estado</h3>
+          {renderContent(loadEstado, errEstado, () => (
+            <div className="h-[240px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={dataEstado}
+                    dataKey="cantidad"
+                    nameKey="estado"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                  >
+                    {dataEstado?.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS_ESTADO[index % COLORS_ESTADO.length]} stroke="rgba(0,0,0,0)" />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Legend iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ))}
+        </div>
+
+        {/* Gráfico 2 - Casos por mes */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+          <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4">Casos por mes</h3>
+          {renderContent(loadMes, errMes, () => (
+            <div className="h-[240px] w-full text-xs">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dataMes} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="mes" tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Line type="monotone" dataKey="casos" stroke="#C97A8A" strokeWidth={2} dot={{ r: 4, fill: '#C97A8A' }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ))}
+        </div>
+
+        {/* Gráfico 3 - Casos por tipo */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 lg:col-span-2">
+          <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4">Casos por tipo</h3>
+          {renderContent(loadTipo, errTipo, () => (
+            <div className="h-[240px] w-full text-xs">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dataTipo} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="tipo" tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="cantidad" fill="#C97A8A" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* MAIN GRID */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         
-        {/* Left Column (Lists & Widgets) */}
+        {/* Left Column (Lists) */}
         <div className="flex flex-col gap-6 xl:col-span-3">
           
           {/* Table */}
@@ -114,7 +156,7 @@ export const DashboardPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {ultimosCasos.map((c) => (
+                  {ultimosCasos.map((c: any) => (
                     <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                       <td className="px-4 py-3 font-medium">
                         <Link to={`/casos/${c.id}`} className="text-primary hover:underline">{c.idLabel}</Link>
@@ -144,33 +186,13 @@ export const DashboardPage = () => {
             </div>
           </Card>
 
-          {/* Widgets Grid */}
-          {visibleWidgets.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {visibleWidgets.map((widget) => (
-                <WidgetCard 
-                  key={widget.id} 
-                  widget={widget} 
-                  onHide={toggleVisibility}
-                  onConfig={(w) => setActiveConfigWidget(w)}
-                  onPeriodoChange={(id, p) => updateWidgetConfig(id, { periodo: p })}
-                />
-              ))}
-            </div>
-          )}
-          {visibleWidgets.length === 0 && (
-            <div className="p-8 text-center text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
-              No hay gráficos visibles. Usa el botón "⚙️ Ocultos" para recuperarlos.
-            </div>
-          )}
-
         </div>
 
         {/* Right Column (Activity Feed) */}
         <div className="xl:col-span-1">
           <Card title="Actividad Reciente" className="h-[calc(100%-1.5rem)]">
             <div className="flex flex-col gap-6 mt-4">
-              {actividad.map((feed, i) => (
+              {actividad.map((feed: any, i: number) => (
                 <div key={i} className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
@@ -189,75 +211,6 @@ export const DashboardPage = () => {
         </div>
 
       </div>
-
-      {/* --- MODALS --- */}
-      
-      {/* 1. Modal for General Order and Visibility */}
-      <Modal
-        isOpen={isGeneralConfigOpen}
-        onClose={() => setIsGeneralConfigOpen(false)}
-        title="Administrar Widgets"
-      >
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Personaliza qué gráficos quieres ver en tu panel y en qué orden.
-        </p>
-        <div className="flex flex-col gap-3">
-          {widgets.map((widget, index) => (
-            <div 
-              key={widget.id} 
-              className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
-                widget.visible 
-                  ? 'bg-white dark:bg-[#2a2a2a] border-gray-200 dark:border-gray-700' 
-                  : 'bg-gray-50 dark:bg-[#1a1a1a] border-gray-200 dark:border-gray-800 opacity-60'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <input 
-                  type="checkbox" 
-                  checked={widget.visible}
-                  onChange={() => toggleVisibility(widget.id)}
-                  className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
-                />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-gray-100">{widget.title}</div>
-                  <div className="text-xs text-gray-500">{widget.subtitle}</div>
-                </div>
-              </div>
-              <div className="flex gap-1">
-                <button 
-                  onClick={() => moveWidget(widget.id, 'up')}
-                  disabled={index === 0}
-                  className="p-1 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-30 bg-transparent border-none cursor-pointer"
-                >
-                  ↑
-                </button>
-                <button 
-                  onClick={() => moveWidget(widget.id, 'down')}
-                  disabled={index === widgets.length - 1}
-                  className="p-1 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-30 bg-transparent border-none cursor-pointer"
-                >
-                  ↓
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Modal>
-
-      {/* 2. Modal for Editing Individual Widget Config */}
-      <WidgetConfigModal 
-        widget={activeConfigWidget} 
-        isOpen={!!activeConfigWidget} 
-        onClose={() => setActiveConfigWidget(null)} 
-        onSave={handleSaveWidgetConfig}
-      />
-
-      {/* 3. Modal for Adding New Widget */}
-      <AddWidgetModal 
-        isOpen={isAddWidgetOpen} 
-        onClose={() => setIsAddWidgetOpen(false)} 
-        onAdd={handleAddWidget} 
-      />
 
     </div>
   );

@@ -20,6 +20,9 @@ const handleResponse = async (response: Response) => {
     window.location.href = '/login';
     throw new Error('Sesión expirada o inválida');
   }
+  if (response.status === 503) {
+    throw new Error('El servidor de base de datos no está disponible. Por favor, intente más tarde.');
+  }
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `Error HTTP: ${response.status}`);

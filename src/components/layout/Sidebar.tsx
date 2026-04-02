@@ -3,7 +3,12 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
 import './Sidebar.css';
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuthContext();
   const location = useLocation();
@@ -11,10 +16,15 @@ export const Sidebar = () => {
   const isCurrent = (path: string) => location.pathname === path;
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <h2>Gestor de Casos</h2>
-        <p>Trabajo Social</p>
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <div className="sidebar-header flex justify-between items-center relative">
+        <div>
+          <h2>Gestor de Casos</h2>
+          <p>Trabajo Social</p>
+        </div>
+        <button className="sidebar-close-btn md:hidden absolute right-4 top-4" onClick={onClose} aria-label="Cerrar menú">
+           ✕
+        </button>
       </div>
 
       <nav className="sidebar-nav">

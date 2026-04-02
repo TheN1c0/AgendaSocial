@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import type { DashboardWidget } from '../types/dashboard.types';
-import { CHART_COLORS } from '../types/charts.types';
 
 export const DEFAULT_WIDGETS: DashboardWidget[] = [
   {
@@ -10,6 +9,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     subtitle: 'Distribución actual',
     visible: true,
     order: 0,
+    dataSource: 'casos-por-estado',
     config: {
       data: [18, 14, 12, 4],
       labels: ['Abierto', 'En proceso', 'Cerrado', 'Derivado'],
@@ -23,6 +23,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     subtitle: 'Últimos períodos',
     visible: true,
     order: 1,
+    dataSource: 'nuevos-vs-cerrados',
     config: {
       periodo: 'mes',
       datasets: [
@@ -38,6 +39,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     subtitle: 'Tendencia',
     visible: true,
     order: 2,
+    dataSource: 'evolucion-activos',
     config: {
       periodo: 'semana',
       data: [32,35,38,34,40,44,41,48],
@@ -52,6 +54,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
     subtitle: 'Casos asignados',
     visible: true,
     order: 3,
+    dataSource: 'carga-profesional',
     config: {
       data: [14, 12, 10, 8],
       labels: ['Marta G.', 'Diego R.', 'Ana B.', 'Carlos F.'],

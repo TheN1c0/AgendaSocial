@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import type { DashboardWidget, ChartType } from '../../types/dashboard.types';
-import type { BarDataset } from '../../types/charts.types';
+import type { DashboardWidget, DataSourceType } from '../../types/dashboard.types';
 
 interface WidgetConfigModalProps {
   widget: DashboardWidget | null;
@@ -44,10 +43,35 @@ export const WidgetConfigModal = ({ widget, isOpen, onClose, onSave }: WidgetCon
   // --- RENDERING TABS ---
 
   const renderDatosTab = () => {
+    const dataSourceSelector = (
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Origen de Datos</label>
+        <select
+          value={editedWidget.dataSource || 'manual'}
+          onChange={(e) => setEditedWidget({ ...editedWidget, dataSource: e.target.value as DataSourceType })}
+          className="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary dark:bg-[#1a1a1a] dark:border-gray-700 dark:text-gray-100 p-2"
+        >
+          <option value="manual">Ingresar datos manualmente</option>
+          <option value="casos-por-estado">Variables Reales: Casos por Estado</option>
+          <option value="carga-profesional">Variables Reales: Carga por Trabajador</option>
+          <option value="nuevos-vs-cerrados">Variables Reales: Nuevos vs Cerrados</option>
+          <option value="evolucion-activos">Variables Reales: Evolución de Activos</option>
+        </select>
+        {editedWidget.dataSource && editedWidget.dataSource !== 'manual' && (
+          <p className="mt-3 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+            ℹ️ <strong>Usando datos reales:</strong> Los valores que ingreses abajo serán ignorados y se mostrarán los datos reales de la base de datos para este gráfico ("{editedWidget.dataSource}"). 
+            (Aún puedes editar colores).
+          </p>
+        )}
+      </div>
+    );
+
     if (isMultiSeries && config.datasets) {
       return (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-gray-500">Etiquetas (Eje X)</p>
+          {dataSourceSelector}
+          <div className={`${editedWidget.dataSource && editedWidget.dataSource !== 'manual' ? 'opacity-50 pointer-events-none' : ''}`}>
+            <p className="text-sm text-gray-500 mb-2 pointer-events-auto">Etiquetas (Eje X)</p>
           <div className="flex flex-wrap gap-2">
             {(config.labels || []).map((label, idx) => (
               <Input 
@@ -109,12 +133,15 @@ export const WidgetConfigModal = ({ widget, isOpen, onClose, onSave }: WidgetCon
             ))}
           </div>
         </div>
+        </div>
       );
     }
 
     // Single series (Donut, Line without datasets, HorizontalBar)
     return (
       <div className="flex flex-col gap-4">
+        {dataSourceSelector}
+        <div className={`flex flex-col gap-4 ${editedWidget.dataSource && editedWidget.dataSource !== 'manual' ? 'opacity-50' : ''}`}>
         {config.data?.map((val, idx) => (
           <div key={idx} className="flex items-center gap-2">
             <Input 
@@ -180,6 +207,7 @@ export const WidgetConfigModal = ({ widget, isOpen, onClose, onSave }: WidgetCon
         >
           + Agregar fila
         </Button>
+        </div>
       </div>
     );
   };

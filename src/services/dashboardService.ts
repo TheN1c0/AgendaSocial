@@ -18,6 +18,12 @@ export interface DashboardStats {
     caso: string;
     tiempo: string;
   }[];
+  widgetsData?: {
+    casosPorEstado: { labels: string[], data: number[] };
+    cargaProfesional: { labels: string[], data: number[] };
+    nuevosVsCerrados: { labels: string[], nuevos: number[], cerrados: number[] };
+    evolucionActivos: { labels: string[], data: number[] };
+  };
 }
 
 export const dashboardService = {

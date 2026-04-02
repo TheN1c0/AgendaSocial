@@ -20,7 +20,6 @@ const USUARIOS_MOCK = [
 const TAB_CONFIG = [
   { key: 'tipos', label: 'Tipos de caso' },
   { key: 'etiquetas', label: 'Etiquetas' },
-  { key: 'dashboard', label: 'Dashboard' },
   { key: 'preferencias', label: 'Preferencias' },
   { key: 'sistema', label: 'Sistema', onlyAdmin: true },
 ];
@@ -294,36 +293,10 @@ export const ConfiguracionPage = () => {
              </div>
            )}
 
-           {/* DASHBOARD */}
+           {/* DASHBOARD (Oculto temporalmente) */}
            {tabQuery === 'dashboard' && (
-             <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center mb-2">
-                   <div>
-                     <h3 className="m-0 text-lg font-bold text-gray-900 dark:text-gray-100">Widgets del dashboard</h3>
-                     <p className="text-sm text-gray-500 m-0 mt-1">Activa o desactiva los gráficos que quieres ver en tu pantalla inicial.</p>
-                   </div>
-                   <Button variant="secondary" onClick={() => alert('Restaurar')}>Restaurar por defecto</Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { id: 'casos-por-estado', title: 'Casos por estado', type: 'Dona', visible: true },
-                    { id: 'nuevos-vs-cerrados', title: 'Nuevos vs Cerrados', type: 'Barras', visible: true },
-                    { id: 'evolucion', title: 'Evolución de activos', type: 'Línea', visible: false },
-                    { id: 'carga', title: 'Carga por profesional', type: 'Barras horiz.', visible: true },
-                  ].map(w => (
-                    <div key={w.id} className="flex justify-between items-center p-4 border border-gray-100 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-[#1a1a1a]">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{w.title}</span>
-                        <span className="text-xs text-gray-500 mt-1">Gráfico de {w.type} · {w.visible ? 'Visible' : 'Oculto'}</span>
-                      </div>
-                      <label className="switch">
-                        <input type="checkbox" checked={w.visible} onChange={() => {}} />
-                        <span className="slider round"></span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
+             <div className="p-4 text-center text-gray-500">
+               Esta sección de configuración ha sido deshabilitada.
              </div>
            )}
 

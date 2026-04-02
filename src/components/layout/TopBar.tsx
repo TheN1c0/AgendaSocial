@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
 import { useNotificaciones } from '../../hooks/useNotificaciones';
 import { Avatar } from '../ui/Avatar';
-import { Input } from '../ui/Input';
+
 import { NotificacionItem } from '../ui/NotificacionItem';
 import './TopBar.css';
 
-export const TopBar = () => {
+interface TopBarProps {
+  onToggleSidebar: () => void;
+}
+
+export const TopBar = ({ onToggleSidebar }: TopBarProps) => {
   const { user } = useAuthContext();
   const { notificaciones, noLeidas, marcarLeida } = useNotificaciones();
   const navigate = useNavigate();
@@ -29,12 +33,15 @@ export const TopBar = () => {
 
   return (
     <header className="topbar">
-      <div className="topbar-search">
-        <Input 
-          type="text" 
-          placeholder="Buscar casos... (ej #4512)" 
-          style={{ marginBottom: 0 }} 
-        />
+      <div className="topbar-search flex items-center gap-2">
+        <button 
+          className="btn-icon md:hidden mr-2 border-none shadow-none text-xl" 
+          onClick={onToggleSidebar}
+          aria-label="Abrir menú"
+        >
+          ☰
+        </button>
+        {/* Barra de búsqueda temporalmente inhabilitada por requerimiento */}
       </div>
 
       <div className="topbar-actions relative" ref={dropdownRef}>
