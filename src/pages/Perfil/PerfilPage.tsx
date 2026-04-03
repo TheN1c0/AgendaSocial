@@ -107,71 +107,87 @@ export const PerfilPage = () => {
              </div>
           </Card>
 
-          <Card title="Cambiar contraseña">
-             <div className="flex flex-col gap-5">
-               
-               {/* Actual */}
-               <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña actual *</label>
-                  <div className="relative">
-                    <input
-                      type={mostrarPassword.actual ? 'text' : 'password'}
-                      className={`w-full rounded-lg border bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 dark:bg-[#242424] dark:text-white transition-colors ${erroresPassword.actual ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary dark:border-gray-700'}`}
-                      value={formPassword.actual}
-                      onChange={e => setFormPassword({ ...formPassword, actual: e.target.value })}
-                    />
-                    <button type="button" onClick={() => setMostrar({ ...mostrarPassword, actual: !mostrarPassword.actual })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
-                      {mostrarPassword.actual ? '👁️' : '🕶️'}
-                    </button>
-                  </div>
-                  {erroresPassword.actual && <p className="text-red-500 text-xs m-0 mt-1">{erroresPassword.actual}</p>}
+          {user?.tipo === 'demo' ? (
+            <Card title="Cambiar contraseña">
+               <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-amber-700 dark:text-amber-500 border border-amber-200 dark:border-amber-800/50">
+                 <div className="flex items-start gap-3">
+                   <span className="text-xl">🔒</span>
+                   <div>
+                     <p className="m-0 font-bold tracking-tight">Acción no permitida en formato Demo</p>
+                     <p className="m-0 text-[14px] mt-1 opacity-90 leading-snug">
+                       Por razones de seguridad pública, la contraseña principal del sistema no puede ser modificada desde la cuenta de prueba.
+                     </p>
+                   </div>
+                 </div>
+               </div>
+            </Card>
+          ) : (
+            <Card title="Cambiar contraseña">
+               <div className="flex flex-col gap-5">
+                 
+                 {/* Actual */}
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña actual *</label>
+                    <div className="relative">
+                      <input
+                        type={mostrarPassword.actual ? 'text' : 'password'}
+                        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 dark:bg-[#242424] dark:text-white transition-colors ${erroresPassword.actual ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary dark:border-gray-700'}`}
+                        value={formPassword.actual}
+                        onChange={e => setFormPassword({ ...formPassword, actual: e.target.value })}
+                      />
+                      <button type="button" onClick={() => setMostrar({ ...mostrarPassword, actual: !mostrarPassword.actual })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
+                        {mostrarPassword.actual ? '👁️' : '🕶️'}
+                      </button>
+                    </div>
+                    {erroresPassword.actual && <p className="text-red-500 text-xs m-0 mt-1">{erroresPassword.actual}</p>}
+                 </div>
+
+                 {/* Nueva */}
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nueva contraseña *</label>
+                    <div className="relative">
+                      <input
+                        type={mostrarPassword.nueva ? 'text' : 'password'}
+                        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 dark:bg-[#242424] dark:text-white transition-colors ${erroresPassword.nueva ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary dark:border-gray-700'}`}
+                        value={formPassword.nueva}
+                        onChange={e => setFormPassword({ ...formPassword, nueva: e.target.value })}
+                      />
+                      <button type="button" onClick={() => setMostrar({ ...mostrarPassword, nueva: !mostrarPassword.nueva })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
+                        {mostrarPassword.nueva ? '👁️' : '🕶️'}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                      <span>ℹ️</span> Mínimo 8 caracteres
+                    </div>
+                    {erroresPassword.nueva && <p className="text-red-500 text-xs m-0 mt-1">{erroresPassword.nueva}</p>}
+                 </div>
+
+                 {/* Confirmar */}
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirmar nueva contraseña *</label>
+                    <div className="relative">
+                      <input
+                        type={mostrarPassword.confirmar ? 'text' : 'password'}
+                        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 dark:bg-[#242424] dark:text-white transition-colors ${erroresPassword.confirmar ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary dark:border-gray-700'}`}
+                        value={formPassword.confirmar}
+                        onChange={e => setFormPassword({ ...formPassword, confirmar: e.target.value })}
+                      />
+                      <button type="button" onClick={() => setMostrar({ ...mostrarPassword, confirmar: !mostrarPassword.confirmar })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
+                        {mostrarPassword.confirmar ? '👁️' : '🕶️'}
+                      </button>
+                    </div>
+                    {erroresPassword.confirmar && <p className="text-red-500 text-xs m-0 mt-1">{erroresPassword.confirmar}</p>}
+                 </div>
+
                </div>
 
-               {/* Nueva */}
-               <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nueva contraseña *</label>
-                  <div className="relative">
-                    <input
-                      type={mostrarPassword.nueva ? 'text' : 'password'}
-                      className={`w-full rounded-lg border bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 dark:bg-[#242424] dark:text-white transition-colors ${erroresPassword.nueva ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary dark:border-gray-700'}`}
-                      value={formPassword.nueva}
-                      onChange={e => setFormPassword({ ...formPassword, nueva: e.target.value })}
-                    />
-                    <button type="button" onClick={() => setMostrar({ ...mostrarPassword, nueva: !mostrarPassword.nueva })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
-                      {mostrarPassword.nueva ? '👁️' : '🕶️'}
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                    <span>ℹ️</span> Mínimo 8 caracteres
-                  </div>
-                  {erroresPassword.nueva && <p className="text-red-500 text-xs m-0 mt-1">{erroresPassword.nueva}</p>}
+               <div className="flex justify-end mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                 <Button variant="secondary" onClick={handleSavePass}>
+                   Cambiar contraseña
+                 </Button>
                </div>
-
-               {/* Confirmar */}
-               <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirmar nueva contraseña *</label>
-                  <div className="relative">
-                    <input
-                      type={mostrarPassword.confirmar ? 'text' : 'password'}
-                      className={`w-full rounded-lg border bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 dark:bg-[#242424] dark:text-white transition-colors ${erroresPassword.confirmar ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary dark:border-gray-700'}`}
-                      value={formPassword.confirmar}
-                      onChange={e => setFormPassword({ ...formPassword, confirmar: e.target.value })}
-                    />
-                    <button type="button" onClick={() => setMostrar({ ...mostrarPassword, confirmar: !mostrarPassword.confirmar })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
-                      {mostrarPassword.confirmar ? '👁️' : '🕶️'}
-                    </button>
-                  </div>
-                  {erroresPassword.confirmar && <p className="text-red-500 text-xs m-0 mt-1">{erroresPassword.confirmar}</p>}
-               </div>
-
-             </div>
-
-             <div className="flex justify-end mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-               <Button variant="secondary" onClick={handleSavePass}>
-                 Cambiar contraseña
-               </Button>
-             </div>
-          </Card>
+            </Card>
+          )}
 
           <Card title="Preferencias del Sistema">
             <PreferenciasForm />
