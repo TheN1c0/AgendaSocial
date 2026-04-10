@@ -112,4 +112,12 @@
     padding: 0;
     border: none;
   }
+
+  .hamburger-btn {
+    display: flex !important;
+  }
+}
+
+.hamburger-btn {
+  display: none !important;
 }

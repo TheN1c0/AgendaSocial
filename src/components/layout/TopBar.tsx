@@ -35,7 +35,7 @@ export const TopBar = ({ onToggleSidebar }: TopBarProps) => {
     <header className="topbar">
       <div className="topbar-search flex items-center gap-2">
         <button 
-          className="btn-icon md:hidden mr-2 border-none shadow-none text-xl" 
+          className="btn-icon hamburger-btn md:hidden mr-2 border-none shadow-none text-xl" 
           onClick={onToggleSidebar}
           aria-label="Abrir menú"
         >
