@@ -144,14 +144,27 @@ export const LoginPage = () => {
             <a href="#" className="text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">¿Olvidó su contraseña?</a>
           </div>
 
+          {/* NEW USER ONBOARDING CALLOUT */}
+          <div className="mt-2 p-3.5 bg-[#C97A8A]/10 dark:bg-[#C97A8A]/15 border border-[#C97A8A]/30 rounded-xl flex items-start gap-2.5 text-left">
+            <span className="text-lg leading-none shrink-0 mt-0.5">✨</span>
+            <div className="flex-1">
+              <div className="text-xs font-bold text-[#8c3a4f] dark:text-[#F7E8EC] flex items-center gap-1.5">
+                ¿Primera vez en la plataforma?
+              </div>
+              <p className="text-[12px] text-gray-600 dark:text-gray-300 m-0 mt-0.5 leading-snug">
+                Si deseas explorar la plataforma, puedes ingresar directamente con acceso completo presionando el botón de abajo.
+              </p>
+            </div>
+          </div>
+
           {/* DEMO BUTTON */}
           <button
             type="button"
             onClick={handleDemo}
             disabled={loading || isDemoPending}
-            className="w-full bg-white dark:bg-[#2a2a2a] border-2 border-dashed border-[#C97A8A]/40 hover:border-[#C97A8A] hover:bg-[#C97A8A]/5 text-[#C97A8A] py-2 rounded-lg font-medium transition-colors text-[14px] flex items-center justify-center gap-2 cursor-pointer mt-1"
+            className="w-full bg-white dark:bg-[#242424] border-2 border-dashed border-[#C97A8A] hover:bg-[#C97A8A]/10 text-[#8c3a4f] dark:text-[#F7E8EC] py-2.5 rounded-lg font-bold transition-all text-[14px] flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#C97A8A]"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             {isDemoPending ? 'Verificando seguridad...' : 'Probar Sistema (Demo Automático)'}
           </button>
 
