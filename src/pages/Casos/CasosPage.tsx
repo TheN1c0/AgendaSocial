@@ -10,8 +10,12 @@ import { CasosTabla } from '../../components/casos/CasosTabla';
 import { casosService } from '../../services/casosService';
 import { useDebounce } from '../../hooks/useDebounce';
 import { ColumnSelector, type Column } from '../../components/ui/ColumnSelector';
+import { ContextHelpBadge } from '../../components/help';
 
 const ITEMS_POR_PAGINA = 10;
+
+
+
 
 const filtrosIniciales: FiltrosCasos = {
   busqueda: '',
@@ -170,8 +174,11 @@ export const CasosPage = () => {
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1a1a1a] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0 leading-tight">Casos</h1>
-          <p className="text-sm text-gray-500 mt-1 mb-0">Registro y seguimiento de todos los casos</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0 leading-tight">Casos</h1>
+            <ContextHelpBadge label="Guía de Casos" />
+          </div>
+          <p className="text-sm text-gray-500 mt-1 mb-0">Registro y seguimiento de todas las intervenciones sociales</p>
         </div>
         <Button variant="primary" onClick={() => navigate('/casos/nuevo')}>+ Nuevo caso</Button>
       </div>

@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
+import { useHelp, ONBOARDING_STEPS } from '../../context/HelpContext';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -12,11 +13,15 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuthContext();
   const location = useLocation();
+  const { isOnboardingOpen, currentStepIndex } = useHelp();
 
   const isCurrent = (path: string) => location.pathname === path;
+  
+  // Elemento enfocado en el Onboarding
+  const currentTourTarget = isOnboardingOpen ? ONBOARDING_STEPS[currentStepIndex]?.targetNavKey : null;
 
   return (
-    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+    <aside className={`sidebar ${isOpen ? 'open' : ''} ${isOnboardingOpen ? '!z-[60] relative shadow-2xl' : ''}`}>
       <div className="sidebar-header flex justify-between items-center relative">
         <div>
           <h2>Gestor de Casos</h2>
@@ -29,17 +34,74 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       <nav className="sidebar-nav">
         <div className="nav-section-title">Principal</div>
-        <Link to="/dashboard" className={`nav-item ${isCurrent('/dashboard') ? 'active' : ''}`}>
+        
+        {/* DASHBOARD */}
+        <Link 
+          to="/dashboard" 
+          id="tour-nav-dashboard"
+          className={`nav-item relative transition-all duration-300 ${
+            isCurrent('/dashboard') ? 'active' : ''
+          } ${
+            isOnboardingOpen && currentTourTarget !== 'dashboard' ? 'opacity-50 hover:opacity-90' : ''
+          } ${
+            currentTourTarget === 'dashboard'
+              ? '!bg-white/25 dark:!bg-white/20 !border-l-4 !border-white font-bold ring-2 ring-white shadow-[0_0_25px_rgba(201,122,138,0.9)] scale-[1.04] !opacity-100'
+              : ''
+          }`}
+        >
           <span className="nav-icon">⊞</span>
           <span>Dashboard</span>
+          {currentTourTarget === 'dashboard' && (
+            <span className="ml-auto text-[10px] bg-white text-primary font-bold px-2 py-0.5 rounded-full animate-bounce shadow-md">
+              Paso 1
+            </span>
+          )}
         </Link>
-        <Link to="/casos" className={`nav-item ${isCurrent('/casos') ? 'active' : ''}`}>
+
+        {/* CASOS */}
+        <Link 
+          to="/casos" 
+          id="tour-nav-casos"
+          className={`nav-item relative transition-all duration-300 ${
+            isCurrent('/casos') ? 'active' : ''
+          } ${
+            isOnboardingOpen && currentTourTarget !== 'casos' ? 'opacity-50 hover:opacity-90' : ''
+          } ${
+            currentTourTarget === 'casos'
+              ? '!bg-white/25 dark:!bg-white/20 !border-l-4 !border-white font-bold ring-2 ring-white shadow-[0_0_25px_rgba(201,122,138,0.9)] scale-[1.04] !opacity-100'
+              : ''
+          }`}
+        >
           <span className="nav-icon">≡</span>
           <span>Casos</span>
+          {currentTourTarget === 'casos' && (
+            <span className="ml-auto text-[10px] bg-white text-primary font-bold px-2 py-0.5 rounded-full animate-bounce shadow-md">
+              {currentStepIndex === 2 ? 'Paso 3' : 'Paso 4'}
+            </span>
+          )}
         </Link>
-        <Link to="/beneficiarios" className={`nav-item ${isCurrent('/beneficiarios') ? 'active' : ''}`}>
+
+        {/* BENEFICIARIOS */}
+        <Link 
+          to="/beneficiarios" 
+          id="tour-nav-beneficiarios"
+          className={`nav-item relative transition-all duration-300 ${
+            isCurrent('/beneficiarios') ? 'active' : ''
+          } ${
+            isOnboardingOpen && currentTourTarget !== 'beneficiarios' ? 'opacity-50 hover:opacity-90' : ''
+          } ${
+            currentTourTarget === 'beneficiarios'
+              ? '!bg-white/25 dark:!bg-white/20 !border-l-4 !border-white font-bold ring-2 ring-white shadow-[0_0_25px_rgba(201,122,138,0.9)] scale-[1.04] !opacity-100'
+              : ''
+          }`}
+        >
           <span className="nav-icon">👤</span>
           <span>Beneficiarios</span>
+          {currentTourTarget === 'beneficiarios' && (
+            <span className="ml-auto text-[10px] bg-white text-primary font-bold px-2 py-0.5 rounded-full animate-bounce shadow-md">
+              Paso 2
+            </span>
+          )}
         </Link>
 
         <div className="nav-section-title">Sistema</div>

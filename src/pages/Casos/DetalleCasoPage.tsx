@@ -12,6 +12,8 @@ import { CambioEstadoModal } from '../../components/casos/CambioEstadoModal';
 import type { EstadoCaso } from '../../types/casos.types';
 import { casosService } from '../../services/casosService';
 import { intervencionesService } from '../../services/intervencionesService';
+import { ContextHelpBadge } from '../../components/help';
+
 
 export const DetalleCasoPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -92,9 +94,12 @@ export const DetalleCasoPage = () => {
       {/* HEADER DEL CASO */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1a1a] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0">
-            {caso.codigoVisible || caso.id.substring(0, 8).toUpperCase()} — {caso.tipo}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0">
+              {caso.codigoVisible || caso.id.substring(0, 8).toUpperCase()} — {caso.tipo}
+            </h1>
+            <ContextHelpBadge label="Seguimiento" />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge estado={caso.estado}>{caso.estado.replace('_', ' ').replace(/\b\w/g, (char: string) => char.toUpperCase())}</Badge>
             <Badge prioridad={caso.prioridad as any}>{caso.prioridad.charAt(0).toUpperCase() + caso.prioridad.slice(1)}</Badge>

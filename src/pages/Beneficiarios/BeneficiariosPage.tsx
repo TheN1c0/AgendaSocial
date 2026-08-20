@@ -11,6 +11,7 @@ import { BeneficiarioFila } from '../../components/beneficiarios/BeneficiarioFil
 import { PROFESIONALES } from '../../types/casos.types';
 import { beneficiariosService } from '../../services/beneficiariosService';
 import { ColumnSelector, type Column } from '../../components/ui/ColumnSelector';
+import { ContextHelpBadge } from '../../components/help';
 
 const COLUMNAS_BENEFICIARIOS: Column[] = [
   { id: 'nombre', label: 'Nombre' },
@@ -123,8 +124,11 @@ export const BeneficiariosPage = () => {
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1a1a1a] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0 leading-tight">Beneficiarios</h1>
-          <p className="text-sm text-gray-500 mt-1 mb-0">Personas registradas en el sistema</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0 leading-tight">Beneficiarios</h1>
+            <ContextHelpBadge label="Padrón" />
+          </div>
+          <p className="text-sm text-gray-500 mt-1 mb-0">Personas y familias registradas en el sistema</p>
         </div>
         <Button variant="primary" onClick={() => setModalNuevo(true)}>+ Nuevo beneficiario</Button>
       </div>
